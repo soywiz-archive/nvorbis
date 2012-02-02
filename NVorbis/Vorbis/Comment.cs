@@ -35,8 +35,8 @@ namespace NVorbis.Vorbis
 	// static storage
 	public class Comment
 	{
-		private static byte[] _vorbis = Encoding.ASCII.GetBytes("vorbis");
-		private static byte[] _vendor = Encoding.ASCII.GetBytes("Xiphophorus libVorbis I 20000508");
+		private static byte[] _vorbis = Encoding.UTF8.GetBytes("vorbis");
+		private static byte[] _vendor = Encoding.UTF8.GetBytes("Xiphophorus libVorbis I 20000508");
 
 		private const int OV_EIMPL = -130;
 
@@ -45,6 +45,16 @@ namespace NVorbis.Vorbis
 		public int[] comment_lengths;
 		public int comments;
 		public byte[] vendor;
+		Encoding Encoding;
+
+		public Comment()
+		{
+		}
+
+		public Comment(Encoding Encoding)
+		{
+			this.Encoding = Encoding;
+		}
 
 		public void init()
 		{
@@ -55,7 +65,7 @@ namespace NVorbis.Vorbis
 
 		public void add(String comment)
 		{
-			add(Encoding.Default.GetBytes(comment));
+			add(Encoding.GetBytes(comment));
 		}
 
 		private void add(byte[] comment)
@@ -117,7 +127,7 @@ namespace NVorbis.Vorbis
 
 		public String query(String tag, int count)
 		{
-			int foo = query(Encoding.ASCII.GetBytes(tag), count);
+			int foo = query(Encoding.GetBytes(tag), count);
 			if (foo == -1)
 				return null;
 			byte[] comment = user_comments[foo];
@@ -126,7 +136,7 @@ namespace NVorbis.Vorbis
 				if (comment[i] == '=')
 				{
 
-					return Util.InternalEncoding.GetString(comment, i + 1, comment_lengths[foo] - (i + 1));
+					return Encoding.GetString(comment, i + 1, comment_lengths[foo] - (i + 1));
 				}
 			}
 			return null;
@@ -261,7 +271,7 @@ namespace NVorbis.Vorbis
 		{
 			get
 			{
-				return Util.InternalEncoding.GetString(vendor, 0, vendor.Length - 1);
+				return Encoding.GetString(vendor, 0, vendor.Length - 1);
 			}
 		}
 
@@ -269,16 +279,16 @@ namespace NVorbis.Vorbis
 		{
 			if (comments <= i)
 				return null;
-			return Util.InternalEncoding.GetString(user_comments[i], 0, user_comments[i].Length - 1);
+			return Encoding.GetString(user_comments[i], 0, user_comments[i].Length - 1);
 		}
 
 		public override string ToString()
 		{
-			String foo = "Vendor: " + Util.InternalEncoding.GetString(vendor, 0, vendor.Length - 1);
+			String foo = "Vendor: " + Encoding.GetString(vendor, 0, vendor.Length - 1);
 			for (int i = 0; i < comments; i++)
 			{
 				foo = foo + "\nComment: "
-					+ Util.InternalEncoding.GetString(user_comments[i], 0, user_comments[i].Length - 1);
+					+ Encoding.GetString(user_comments[i], 0, user_comments[i].Length - 1);
 			}
 			foo = foo + "\n";
 			return foo;

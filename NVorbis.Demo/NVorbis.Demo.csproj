@@ -50,12 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NVorbis\NVorbis.csproj">
-      <Project>{17F87208-BB96-4500-8E9A-FE800B67A578}</Project>
+      <Project>{33DAA6A9-76F0-462B-BD0A-4DB6BDE28FA6}</Project>
       <Name>NVorbis</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\NVorvis.Extra\NVorvis.Extra.csproj">
-      <Project>{44A22CBF-64E6-4B21-B87D-264349DB9A11}</Project>
-      <Name>NVorvis.Extra</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

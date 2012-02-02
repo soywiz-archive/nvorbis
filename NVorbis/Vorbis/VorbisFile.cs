@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NVorbis.Ogg;
+using System.Diagnostics;
 
 namespace NVorbis.Vorbis
 {
@@ -70,6 +71,7 @@ namespace NVorbis.Vorbis
 			vb = new Block(vd);
 		}
 
+#if UNSAFE
 		public VorbisFile(String file)
 		{
 			_init();
@@ -93,17 +95,19 @@ namespace NVorbis.Vorbis
 				{
 					try
 					{
-						_is.Close();
+						_is.Dispose();
+						//_is.Close();
 					}
 					catch (IOException e)
 					{
-						Console.Error.WriteLine(e);
+						Debug.WriteLine(e);
 					}
 				}
 			}
 		}
+#endif
 
-		public VorbisFile(Stream _is, byte[] initial, int ibytes)
+		public VorbisFile(Stream _is, byte[] initial = null, int ibytes = 0)
 		{
 			_init();
 			int ret = open(_is, initial, ibytes);
@@ -1516,7 +1520,8 @@ namespace NVorbis.Vorbis
 
 		public void close()
 		{
-			datasource.Close();
+			//datasource.Close();
+			datasource.Dispose();
 		}
 	}
 

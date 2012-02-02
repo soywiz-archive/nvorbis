@@ -477,7 +477,7 @@ namespace NVorbis.Ogg
 			}
 
 			// construct the header in temp storage
-			Array.Copy(Encoding.ASCII.GetBytes("OggS"), 0, header, 0, 4);
+			Array.Copy(Encoding.UTF8.GetBytes("OggS"), 0, header, 0, 4);
 
 			// stream structure version
 			header[4] = 0x00;

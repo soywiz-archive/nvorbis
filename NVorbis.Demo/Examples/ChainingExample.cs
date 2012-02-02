@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace NVorbis.Vorbis
 {
@@ -42,7 +43,7 @@ namespace NVorbis.Vorbis
 			{
 				if (arg.Length > 0)
 				{
-					ov = new VorbisFile(arg[0]);
+					ov = new VorbisFile(File.OpenRead(arg[0]));
 				}
 				else
 				{

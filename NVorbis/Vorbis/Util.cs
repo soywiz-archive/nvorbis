@@ -5,7 +5,10 @@ using System.Text;
 
 namespace NVorbis.Vorbis
 {
-	unsafe public class Util
+#if UNSAFE
+	unsafe
+#endif
+	public class Util
 	{
 		static internal int ilog(int _v)
 		{
@@ -46,29 +49,38 @@ namespace NVorbis.Vorbis
 
 		static internal int FloatToIntBits(float v)
 		{
+#if !UNSAFE
+			return BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
+#else
 			float[] vv = new float[1];
 			vv[0] = v;
 			fixed (float* ptr = vv)
 			{
 				return *(int*)ptr;
 			}
+#endif
 		}
 
 		static internal float IntBitsToFloat(int v)
 		{
+#if !UNSAFE
+			return BitConverter.ToSingle(BitConverter.GetBytes(v), 0);
+#else
 			int[] vv = new int[1];
 			vv[0] = v;
 			fixed (int* ptr = vv)
 			{
 				return *(float*)ptr;
 			}
+#endif
 		}
 
 		static public Encoding InternalEncoding
 		{
 			get
 			{
-				return Encoding.ASCII;
+				return Encoding.UTF8;
+				//return Encoding.ASCII;
 			}
 		}
 	}
