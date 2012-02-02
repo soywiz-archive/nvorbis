@@ -5,11 +5,11 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
-    internal class InfoMode
-    {
-        internal int blockflag;
-        internal int windowtype;
-        internal int transformtype;
-        internal int mapping;
-    }
+	internal class InfoMode
+	{
+		internal int blockflag;
+		internal int windowtype;
+		internal int transformtype;
+		internal int mapping;
+	}
 }

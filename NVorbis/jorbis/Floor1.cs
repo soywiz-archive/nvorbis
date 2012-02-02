@@ -5,435 +5,435 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
-    class Floor1 : FuncFloor
-    {
-        internal const int floor1_rangedb = 140;
-        internal const int VIF_POSIT = 63;
+	class Floor1 : FuncFloor
+	{
+		internal const int floor1_rangedb = 140;
+		internal const int VIF_POSIT = 63;
 
-        override internal void pack(Object i, NVorbis.jogg.Buffer opb)
-        {
-            InfoFloor1 info = (InfoFloor1)i;
+		override internal void pack(Object i, NVorbis.jogg.Buffer opb)
+		{
+			InfoFloor1 info = (InfoFloor1)i;
 
-            int count = 0;
-            int rangebits;
-            int maxposit = info.postlist[1];
-            int maxclass = -1;
+			int count = 0;
+			int rangebits;
+			int maxposit = info.postlist[1];
+			int maxclass = -1;
 
-            /* save out partitions */
-            opb.write(info.partitions, 5); /* only 0 to 31 legal */
-            for (int j = 0; j < info.partitions; j++)
-            {
-                opb.write(info.partitionclass[j], 4); /* only 0 to 15 legal */
-                if (maxclass < info.partitionclass[j])
-                    maxclass = info.partitionclass[j];
-            }
+			/* save out partitions */
+			opb.write(info.partitions, 5); /* only 0 to 31 legal */
+			for (int j = 0; j < info.partitions; j++)
+			{
+				opb.write(info.partitionclass[j], 4); /* only 0 to 15 legal */
+				if (maxclass < info.partitionclass[j])
+					maxclass = info.partitionclass[j];
+			}
 
-            /* save out partition classes */
-            for (int j = 0; j < maxclass + 1; j++)
-            {
-                opb.write(info.class_dim[j] - 1, 3); /* 1 to 8 */
-                opb.write(info.class_subs[j], 2); /* 0 to 3 */
-                if (info.class_subs[j] != 0)
-                {
-                    opb.write(info.class_book[j], 8);
-                }
-                for (int k = 0; k < (1 << info.class_subs[j]); k++)
-                {
-                    opb.write(info.class_subbook[j][k] + 1, 8);
-                }
-            }
+			/* save out partition classes */
+			for (int j = 0; j < maxclass + 1; j++)
+			{
+				opb.write(info.class_dim[j] - 1, 3); /* 1 to 8 */
+				opb.write(info.class_subs[j], 2); /* 0 to 3 */
+				if (info.class_subs[j] != 0)
+				{
+					opb.write(info.class_book[j], 8);
+				}
+				for (int k = 0; k < (1 << info.class_subs[j]); k++)
+				{
+					opb.write(info.class_subbook[j][k] + 1, 8);
+				}
+			}
 
-            /* save out the post list */
-            opb.write(info.mult - 1, 2); /* only 1,2,3,4 legal now */
-            opb.write(Util.ilog2(maxposit), 4);
-            rangebits = Util.ilog2(maxposit);
+			/* save out the post list */
+			opb.write(info.mult - 1, 2); /* only 1,2,3,4 legal now */
+			opb.write(Util.ilog2(maxposit), 4);
+			rangebits = Util.ilog2(maxposit);
 
-            for (int j = 0, k = 0; j < info.partitions; j++)
-            {
-                count += info.class_dim[info.partitionclass[j]];
-                for (; k < count; k++)
-                {
-                    opb.write(info.postlist[k + 2], rangebits);
-                }
-            }
-        }
+			for (int j = 0, k = 0; j < info.partitions; j++)
+			{
+				count += info.class_dim[info.partitionclass[j]];
+				for (; k < count; k++)
+				{
+					opb.write(info.postlist[k + 2], rangebits);
+				}
+			}
+		}
 
-        override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
-        {
-            int count = 0, maxclass = -1, rangebits;
-            InfoFloor1 info = new InfoFloor1();
+		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
+		{
+			int count = 0, maxclass = -1, rangebits;
+			InfoFloor1 info = new InfoFloor1();
 
-            /* read partitions */
-            info.partitions = opb.read(5); /* only 0 to 31 legal */
-            for (int j = 0; j < info.partitions; j++)
-            {
-                info.partitionclass[j] = opb.read(4); /* only 0 to 15 legal */
-                if (maxclass < info.partitionclass[j])
-                    maxclass = info.partitionclass[j];
-            }
+			/* read partitions */
+			info.partitions = opb.read(5); /* only 0 to 31 legal */
+			for (int j = 0; j < info.partitions; j++)
+			{
+				info.partitionclass[j] = opb.read(4); /* only 0 to 15 legal */
+				if (maxclass < info.partitionclass[j])
+					maxclass = info.partitionclass[j];
+			}
 
-            /* read partition classes */
-            for (int j = 0; j < maxclass + 1; j++)
-            {
-                info.class_dim[j] = opb.read(3) + 1; /* 1 to 8 */
-                info.class_subs[j] = opb.read(2); /* 0,1,2,3 bits */
-                if (info.class_subs[j] < 0)
-                {
-                    info.free();
-                    return (null);
-                }
-                if (info.class_subs[j] != 0)
-                {
-                    info.class_book[j] = opb.read(8);
-                }
-                if (info.class_book[j] < 0 || info.class_book[j] >= vi.books)
-                {
-                    info.free();
-                    return (null);
-                }
-                for (int k = 0; k < (1 << info.class_subs[j]); k++)
-                {
-                    info.class_subbook[j][k] = opb.read(8) - 1;
-                    if (info.class_subbook[j][k] < -1 || info.class_subbook[j][k] >= vi.books)
-                    {
-                        info.free();
-                        return (null);
-                    }
-                }
-            }
+			/* read partition classes */
+			for (int j = 0; j < maxclass + 1; j++)
+			{
+				info.class_dim[j] = opb.read(3) + 1; /* 1 to 8 */
+				info.class_subs[j] = opb.read(2); /* 0,1,2,3 bits */
+				if (info.class_subs[j] < 0)
+				{
+					info.free();
+					return (null);
+				}
+				if (info.class_subs[j] != 0)
+				{
+					info.class_book[j] = opb.read(8);
+				}
+				if (info.class_book[j] < 0 || info.class_book[j] >= vi.books)
+				{
+					info.free();
+					return (null);
+				}
+				for (int k = 0; k < (1 << info.class_subs[j]); k++)
+				{
+					info.class_subbook[j][k] = opb.read(8) - 1;
+					if (info.class_subbook[j][k] < -1 || info.class_subbook[j][k] >= vi.books)
+					{
+						info.free();
+						return (null);
+					}
+				}
+			}
 
-            /* read the post list */
-            info.mult = opb.read(2) + 1; /* only 1,2,3,4 legal now */
-            rangebits = opb.read(4);
+			/* read the post list */
+			info.mult = opb.read(2) + 1; /* only 1,2,3,4 legal now */
+			rangebits = opb.read(4);
 
-            for (int j = 0, k = 0; j < info.partitions; j++)
-            {
-                count += info.class_dim[info.partitionclass[j]];
-                for (; k < count; k++)
-                {
-                    int t = info.postlist[k + 2] = opb.read(rangebits);
-                    if (t < 0 || t >= (1 << rangebits))
-                    {
-                        info.free();
-                        return (null);
-                    }
-                }
-            }
-            info.postlist[0] = 0;
-            info.postlist[1] = 1 << rangebits;
+			for (int j = 0, k = 0; j < info.partitions; j++)
+			{
+				count += info.class_dim[info.partitionclass[j]];
+				for (; k < count; k++)
+				{
+					int t = info.postlist[k + 2] = opb.read(rangebits);
+					if (t < 0 || t >= (1 << rangebits))
+					{
+						info.free();
+						return (null);
+					}
+				}
+			}
+			info.postlist[0] = 0;
+			info.postlist[1] = 1 << rangebits;
 
-            return (info);
-        }
+			return (info);
+		}
 
-        override internal Object look(DspState vd, InfoMode mi, Object i)
-        {
-            int _n = 0;
+		override internal Object look(DspState vd, InfoMode mi, Object i)
+		{
+			int _n = 0;
 
-            int[] sortpointer = new int[VIF_POSIT + 2];
+			int[] sortpointer = new int[VIF_POSIT + 2];
 
-            //    Info vi=vd.vi;
+			//    Info vi=vd.vi;
 
-            InfoFloor1 info = (InfoFloor1)i;
-            LookFloor1 look = new LookFloor1();
-            look.vi = info;
-            look.n = info.postlist[1];
+			InfoFloor1 info = (InfoFloor1)i;
+			LookFloor1 look = new LookFloor1();
+			look.vi = info;
+			look.n = info.postlist[1];
 
-            /* we drop each position value in-between already decoded values,
-             and use linear interpolation to predict each new value past the
-             edges.  The positions are read in the order of the position
-             list... we precompute the bounding positions in the lookup.  Of
-             course, the neighbors can change (if a position is declined), but
-             this is an initial mapping */
+			/* we drop each position value in-between already decoded values,
+			 and use linear interpolation to predict each new value past the
+			 edges.  The positions are read in the order of the position
+			 list... we precompute the bounding positions in the lookup.  Of
+			 course, the neighbors can change (if a position is declined), but
+			 this is an initial mapping */
 
-            for (int j = 0; j < info.partitions; j++)
-            {
-                _n += info.class_dim[info.partitionclass[j]];
-            }
-            _n += 2;
-            look.posts = _n;
+			for (int j = 0; j < info.partitions; j++)
+			{
+				_n += info.class_dim[info.partitionclass[j]];
+			}
+			_n += 2;
+			look.posts = _n;
 
-            /* also store a sorted position index */
-            for (int j = 0; j < _n; j++)
-            {
-                sortpointer[j] = j;
-            }
-            //    qsort(sortpointer,n,sizeof(int),icomp); // !!
+			/* also store a sorted position index */
+			for (int j = 0; j < _n; j++)
+			{
+				sortpointer[j] = j;
+			}
+			//    qsort(sortpointer,n,sizeof(int),icomp); // !!
 
-            int foo;
-            for (int j = 0; j < _n - 1; j++)
-            {
-                for (int k = j; k < _n; k++)
-                {
-                    if (info.postlist[sortpointer[j]] > info.postlist[sortpointer[k]])
-                    {
-                        foo = sortpointer[k];
-                        sortpointer[k] = sortpointer[j];
-                        sortpointer[j] = foo;
-                    }
-                }
-            }
+			int foo;
+			for (int j = 0; j < _n - 1; j++)
+			{
+				for (int k = j; k < _n; k++)
+				{
+					if (info.postlist[sortpointer[j]] > info.postlist[sortpointer[k]])
+					{
+						foo = sortpointer[k];
+						sortpointer[k] = sortpointer[j];
+						sortpointer[j] = foo;
+					}
+				}
+			}
 
-            /* points from sort order back to range number */
-            for (int j = 0; j < _n; j++)
-            {
-                look.forward_index[j] = sortpointer[j];
-            }
-            /* points from range order to sorted position */
-            for (int j = 0; j < _n; j++)
-            {
-                look.reverse_index[look.forward_index[j]] = j;
-            }
-            /* we actually need the post values too */
-            for (int j = 0; j < _n; j++)
-            {
-                look.sorted_index[j] = info.postlist[look.forward_index[j]];
-            }
+			/* points from sort order back to range number */
+			for (int j = 0; j < _n; j++)
+			{
+				look.forward_index[j] = sortpointer[j];
+			}
+			/* points from range order to sorted position */
+			for (int j = 0; j < _n; j++)
+			{
+				look.reverse_index[look.forward_index[j]] = j;
+			}
+			/* we actually need the post values too */
+			for (int j = 0; j < _n; j++)
+			{
+				look.sorted_index[j] = info.postlist[look.forward_index[j]];
+			}
 
-            /* quantize values to multiplier spec */
-            switch (info.mult)
-            {
-                case 1: /* 1024 -> 256 */
-                    look.quant_q = 256;
-                    break;
-                case 2: /* 1024 -> 128 */
-                    look.quant_q = 128;
-                    break;
-                case 3: /* 1024 -> 86 */
-                    look.quant_q = 86;
-                    break;
-                case 4: /* 1024 -> 64 */
-                    look.quant_q = 64;
-                    break;
-                default:
-                    look.quant_q = -1;
-                    break;
-            }
+			/* quantize values to multiplier spec */
+			switch (info.mult)
+			{
+				case 1: /* 1024 -> 256 */
+					look.quant_q = 256;
+					break;
+				case 2: /* 1024 -> 128 */
+					look.quant_q = 128;
+					break;
+				case 3: /* 1024 -> 86 */
+					look.quant_q = 86;
+					break;
+				case 4: /* 1024 -> 64 */
+					look.quant_q = 64;
+					break;
+				default:
+					look.quant_q = -1;
+					break;
+			}
 
-            /* discover our neighbors for decode where we don't use fit flags
-               (that would push the neighbors outward) */
-            for (int j = 0; j < _n - 2; j++)
-            {
-                int lo = 0;
-                int hi = 1;
-                int lx = 0;
-                int hx = look.n;
-                int currentx = info.postlist[j + 2];
-                for (int k = 0; k < j + 2; k++)
-                {
-                    int x = info.postlist[k];
-                    if (x > lx && x < currentx)
-                    {
-                        lo = k;
-                        lx = x;
-                    }
-                    if (x < hx && x > currentx)
-                    {
-                        hi = k;
-                        hx = x;
-                    }
-                }
-                look.loneighbor[j] = lo;
-                look.hineighbor[j] = hi;
-            }
+			/* discover our neighbors for decode where we don't use fit flags
+			   (that would push the neighbors outward) */
+			for (int j = 0; j < _n - 2; j++)
+			{
+				int lo = 0;
+				int hi = 1;
+				int lx = 0;
+				int hx = look.n;
+				int currentx = info.postlist[j + 2];
+				for (int k = 0; k < j + 2; k++)
+				{
+					int x = info.postlist[k];
+					if (x > lx && x < currentx)
+					{
+						lo = k;
+						lx = x;
+					}
+					if (x < hx && x > currentx)
+					{
+						hi = k;
+						hx = x;
+					}
+				}
+				look.loneighbor[j] = lo;
+				look.hineighbor[j] = hi;
+			}
 
-            return look;
-        }
+			return look;
+		}
 
-        override internal void free_info(Object i)
-        {
-        }
+		override internal void free_info(Object i)
+		{
+		}
 
-        override internal void free_look(Object i)
-        {
-        }
+		override internal void free_look(Object i)
+		{
+		}
 
-        override internal void free_state(Object vs)
-        {
-        }
+		override internal void free_state(Object vs)
+		{
+		}
 
-        override internal int forward(Block vb, Object i, float[] In, float[] Out, Object vs)
-        {
-            return 0;
-        }
+		override internal int forward(Block vb, Object i, float[] In, float[] Out, Object vs)
+		{
+			return 0;
+		}
 
-        override internal Object inverse1(Block vb, Object ii, Object memo)
-        {
-            LookFloor1 look = (LookFloor1)ii;
-            InfoFloor1 info = look.vi;
-            CodeBook[] books = vb.vd.fullbooks;
+		override internal Object inverse1(Block vb, Object ii, Object memo)
+		{
+			LookFloor1 look = (LookFloor1)ii;
+			InfoFloor1 info = look.vi;
+			CodeBook[] books = vb.vd.fullbooks;
 
-            /* unpack wrapped/predicted values from stream */
-            if (vb.opb.read(1) == 1)
-            {
-                int[] fit_value = null;
-                if (memo is int[])
-                {
-                    fit_value = (int[])memo;
-                }
-                if (fit_value == null || fit_value.Length < look.posts)
-                {
-                    fit_value = new int[look.posts];
-                }
-                else
-                {
-                    for (int i = 0; i < fit_value.Length; i++)
-                        fit_value[i] = 0;
-                }
+			/* unpack wrapped/predicted values from stream */
+			if (vb.opb.read(1) == 1)
+			{
+				int[] fit_value = null;
+				if (memo is int[])
+				{
+					fit_value = (int[])memo;
+				}
+				if (fit_value == null || fit_value.Length < look.posts)
+				{
+					fit_value = new int[look.posts];
+				}
+				else
+				{
+					for (int i = 0; i < fit_value.Length; i++)
+						fit_value[i] = 0;
+				}
 
-                fit_value[0] = vb.opb.read(Util.ilog(look.quant_q - 1));
-                fit_value[1] = vb.opb.read(Util.ilog(look.quant_q - 1));
+				fit_value[0] = vb.opb.read(Util.ilog(look.quant_q - 1));
+				fit_value[1] = vb.opb.read(Util.ilog(look.quant_q - 1));
 
-                /* partition by partition */
-                for (int i = 0, j = 2; i < info.partitions; i++)
-                {
-                    int clss = info.partitionclass[i];
-                    int cdim = info.class_dim[clss];
-                    int csubbits = info.class_subs[clss];
-                    int csub = 1 << csubbits;
-                    uint cval = 0;
+				/* partition by partition */
+				for (int i = 0, j = 2; i < info.partitions; i++)
+				{
+					int clss = info.partitionclass[i];
+					int cdim = info.class_dim[clss];
+					int csubbits = info.class_subs[clss];
+					int csub = 1 << csubbits;
+					uint cval = 0;
 
-                    /* decode the partition's first stage cascade value */
-                    if (csubbits != 0)
-                    {
-                        cval = (uint)books[info.class_book[clss]].decode(vb.opb);
+					/* decode the partition's first stage cascade value */
+					if (csubbits != 0)
+					{
+						cval = (uint)books[info.class_book[clss]].decode(vb.opb);
 
-                        if (unchecked(cval == -1))
-                        {
-                            return (null);
-                        }
-                    }
+						if (unchecked(cval == -1))
+						{
+							return (null);
+						}
+					}
 
-                    for (int k = 0; k < cdim; k++)
-                    {
-                        int book = info.class_subbook[clss][cval & (csub - 1)];
-                        cval >>= csubbits;
-                        if (book >= 0)
-                        {
-                            if ((fit_value[j + k] = books[book].decode(vb.opb)) == -1)
-                            {
-                                return (null);
-                            }
-                        }
-                        else
-                        {
-                            fit_value[j + k] = 0;
-                        }
-                    }
-                    j += cdim;
-                }
+					for (int k = 0; k < cdim; k++)
+					{
+						int book = info.class_subbook[clss][cval & (csub - 1)];
+						cval >>= csubbits;
+						if (book >= 0)
+						{
+							if ((fit_value[j + k] = books[book].decode(vb.opb)) == -1)
+							{
+								return (null);
+							}
+						}
+						else
+						{
+							fit_value[j + k] = 0;
+						}
+					}
+					j += cdim;
+				}
 
-                /* unwrap positive values and reconsitute via linear interpolation */
-                for (int i = 2; i < look.posts; i++)
-                {
-                    int predicted = render_point(info.postlist[look.loneighbor[i - 2]],
-                        info.postlist[look.hineighbor[i - 2]],
-                        fit_value[look.loneighbor[i - 2]], fit_value[look.hineighbor[i - 2]],
-                        info.postlist[i]);
-                    int hiroom = look.quant_q - predicted;
-                    int loroom = predicted;
-                    int room = (hiroom < loroom ? hiroom : loroom) << 1;
-                    int val = fit_value[i];
+				/* unwrap positive values and reconsitute via linear interpolation */
+				for (int i = 2; i < look.posts; i++)
+				{
+					int predicted = render_point(info.postlist[look.loneighbor[i - 2]],
+						info.postlist[look.hineighbor[i - 2]],
+						fit_value[look.loneighbor[i - 2]], fit_value[look.hineighbor[i - 2]],
+						info.postlist[i]);
+					int hiroom = look.quant_q - predicted;
+					int loroom = predicted;
+					int room = (hiroom < loroom ? hiroom : loroom) << 1;
+					int val = fit_value[i];
 
-                    if (val != 0)
-                    {
-                        if (val >= room)
-                        {
-                            if (hiroom > loroom)
-                            {
-                                val = val - loroom;
-                            }
-                            else
-                            {
-                                val = -1 - (val - hiroom);
-                            }
-                        }
-                        else
-                        {
-                            if ((val & 1) != 0)
-                            {
-                                val = -(int)(((uint)(val + 1)) >> 1);
-                            }
-                            else
-                            {
-                                val >>= 1;
-                            }
-                        }
+					if (val != 0)
+					{
+						if (val >= room)
+						{
+							if (hiroom > loroom)
+							{
+								val = val - loroom;
+							}
+							else
+							{
+								val = -1 - (val - hiroom);
+							}
+						}
+						else
+						{
+							if ((val & 1) != 0)
+							{
+								val = -(int)(((uint)(val + 1)) >> 1);
+							}
+							else
+							{
+								val >>= 1;
+							}
+						}
 
-                        fit_value[i] = val + predicted;
-                        fit_value[look.loneighbor[i - 2]] &= 0x7fff;
-                        fit_value[look.hineighbor[i - 2]] &= 0x7fff;
-                    }
-                    else
-                    {
-                        fit_value[i] = predicted | 0x8000;
-                    }
-                }
-                return (fit_value);
-            }
+						fit_value[i] = val + predicted;
+						fit_value[look.loneighbor[i - 2]] &= 0x7fff;
+						fit_value[look.hineighbor[i - 2]] &= 0x7fff;
+					}
+					else
+					{
+						fit_value[i] = predicted | 0x8000;
+					}
+				}
+				return (fit_value);
+			}
 
-            return (null);
-        }
+			return (null);
+		}
 
-        private static int render_point(int x0, int x1, int y0, int y1, int x)
-        {
-            y0 &= 0x7fff; /* mask off flag */
-            y1 &= 0x7fff;
+		private static int render_point(int x0, int x1, int y0, int y1, int x)
+		{
+			y0 &= 0x7fff; /* mask off flag */
+			y1 &= 0x7fff;
 
-            {
-                int dy = y1 - y0;
-                int adx = x1 - x0;
-                int ady = Math.Abs(dy);
-                int err = ady * (x - x0);
+			{
+				int dy = y1 - y0;
+				int adx = x1 - x0;
+				int ady = Math.Abs(dy);
+				int err = ady * (x - x0);
 
-                int off = (int)(err / adx);
-                if (dy < 0)
-                    return (y0 - off);
-                return (y0 + off);
-            }
-        }
+				int off = (int)(err / adx);
+				if (dy < 0)
+					return (y0 - off);
+				return (y0 + off);
+			}
+		}
 
-        override internal int inverse2(Block vb, Object i, Object memo, float[] Out)
-        {
-            LookFloor1 look = (LookFloor1)i;
-            InfoFloor1 info = look.vi;
-            int n = vb.vd.vi.blocksizes[vb.mode] / 2;
+		override internal int inverse2(Block vb, Object i, Object memo, float[] Out)
+		{
+			LookFloor1 look = (LookFloor1)i;
+			InfoFloor1 info = look.vi;
+			int n = vb.vd.vi.blocksizes[vb.mode] / 2;
 
-            if (memo != null)
-            {
-                /* render the lines */
-                int[] fit_value = (int[])memo;
-                int hx = 0;
-                int lx = 0;
-                int ly = fit_value[0] * info.mult;
-                for (int j = 1; j < look.posts; j++)
-                {
-                    int current = look.forward_index[j];
-                    int hy = fit_value[current] & 0x7fff;
-                    if (hy == fit_value[current])
-                    {
-                        hy *= info.mult;
-                        hx = info.postlist[current];
+			if (memo != null)
+			{
+				/* render the lines */
+				int[] fit_value = (int[])memo;
+				int hx = 0;
+				int lx = 0;
+				int ly = fit_value[0] * info.mult;
+				for (int j = 1; j < look.posts; j++)
+				{
+					int current = look.forward_index[j];
+					int hy = fit_value[current] & 0x7fff;
+					if (hy == fit_value[current])
+					{
+						hy *= info.mult;
+						hx = info.postlist[current];
 
-                        render_line(lx, hx, ly, hy, Out);
+						render_line(lx, hx, ly, hy, Out);
 
-                        lx = hx;
-                        ly = hy;
-                    }
-                }
-                for (int j = hx; j < n; j++)
-                {
-                    Out[j] *= Out[j - 1]; /* be certain */
-                }
-                return (1);
-            }
-            for (int j = 0; j < n; j++)
-            {
-                Out[j] = 0.0f;
-            }
-            return (0);
-        }
+						lx = hx;
+						ly = hy;
+					}
+				}
+				for (int j = hx; j < n; j++)
+				{
+					Out[j] *= Out[j - 1]; /* be certain */
+				}
+				return (1);
+			}
+			for (int j = 0; j < n; j++)
+			{
+				Out[j] = 0.0f;
+			}
+			return (0);
+		}
 
-        private static float[] FLOOR_fromdB_LOOKUP = {1.0649863e-07F, 1.1341951e-07F,
+		private static float[] FLOOR_fromdB_LOOKUP = {1.0649863e-07F, 1.1341951e-07F,
 		  1.2079015e-07F, 1.2863978e-07F, 1.3699951e-07F, 1.4590251e-07F,
 		  1.5538408e-07F, 1.6548181e-07F, 1.7623575e-07F, 1.8768855e-07F,
 		  1.9988561e-07F, 2.128753e-07F, 2.2670913e-07F, 2.4144197e-07F,
@@ -495,175 +495,175 @@ namespace NVorbis.jorbis
 		  0.64356699F, 0.68538959F, 0.72993007F, 0.77736504F, 0.82788260F,
 		  0.88168307F, 0.9389798F, 1.0F};
 
-        private static void render_line(int x0, int x1, int y0, int y1, float[] d)
-        {
-            int dy = y1 - y0;
-            int adx = x1 - x0;
-            int ady = Math.Abs(dy);
-            int _base = dy / adx;
-            int sy = (dy < 0 ? _base - 1 : _base + 1);
-            int x = x0;
-            int y = y0;
-            int err = 0;
+		private static void render_line(int x0, int x1, int y0, int y1, float[] d)
+		{
+			int dy = y1 - y0;
+			int adx = x1 - x0;
+			int ady = Math.Abs(dy);
+			int _base = dy / adx;
+			int sy = (dy < 0 ? _base - 1 : _base + 1);
+			int x = x0;
+			int y = y0;
+			int err = 0;
 
-            ady -= Math.Abs(_base * adx);
+			ady -= Math.Abs(_base * adx);
 
-            d[x] *= FLOOR_fromdB_LOOKUP[y];
-            while (++x < x1)
-            {
-                err = err + ady;
-                if (err >= adx)
-                {
-                    err -= adx;
-                    y += sy;
-                }
-                else
-                {
-                    y += _base;
-                }
-                d[x] *= FLOOR_fromdB_LOOKUP[y];
-            }
-        }
+			d[x] *= FLOOR_fromdB_LOOKUP[y];
+			while (++x < x1)
+			{
+				err = err + ady;
+				if (err >= adx)
+				{
+					err -= adx;
+					y += sy;
+				}
+				else
+				{
+					y += _base;
+				}
+				d[x] *= FLOOR_fromdB_LOOKUP[y];
+			}
+		}
 
-        internal class InfoFloor1
-        {
-            internal const int VIF_POSIT = 63;
-            internal const int VIF_CLASS = 16;
-            internal const int VIF_PARTS = 31;
+		internal class InfoFloor1
+		{
+			internal const int VIF_POSIT = 63;
+			internal const int VIF_CLASS = 16;
+			internal const int VIF_PARTS = 31;
 
-            internal int partitions; /* 0 to 31 */
-            internal int[] partitionclass = new int[VIF_PARTS]; /* 0 to 15 */
+			internal int partitions; /* 0 to 31 */
+			internal int[] partitionclass = new int[VIF_PARTS]; /* 0 to 15 */
 
-            internal int[] class_dim = new int[VIF_CLASS]; /* 1 to 8 */
-            internal int[] class_subs = new int[VIF_CLASS]; /* 0,1,2,3 (bits: 1<<n poss) */
-            internal int[] class_book = new int[VIF_CLASS]; /* subs ^ dim entries */
-            internal int[][] class_subbook = new int[VIF_CLASS][]; /* [VIF_CLASS][subs] */
+			internal int[] class_dim = new int[VIF_CLASS]; /* 1 to 8 */
+			internal int[] class_subs = new int[VIF_CLASS]; /* 0,1,2,3 (bits: 1<<n poss) */
+			internal int[] class_book = new int[VIF_CLASS]; /* subs ^ dim entries */
+			internal int[][] class_subbook = new int[VIF_CLASS][]; /* [VIF_CLASS][subs] */
 
-            internal int mult; /* 1 2 3 or 4 */
-            internal int[] postlist = new int[VIF_POSIT + 2]; /* first two implicit */
+			internal int mult; /* 1 2 3 or 4 */
+			internal int[] postlist = new int[VIF_POSIT + 2]; /* first two implicit */
 
-            /* encode side analysis parameters */
-            internal float maxover;
-            internal float maxunder;
-            internal float maxerr;
+			/* encode side analysis parameters */
+			internal float maxover;
+			internal float maxunder;
+			internal float maxerr;
 
-            internal int twofitminsize;
-            internal int twofitminused;
-            internal int twofitweight;
-            internal float twofitatten;
-            internal int unusedminsize;
-            internal int unusedmin_n;
+			internal int twofitminsize;
+			internal int twofitminused;
+			internal int twofitweight;
+			internal float twofitatten;
+			internal int unusedminsize;
+			internal int unusedmin_n;
 
-            internal int n;
+			internal int n;
 
-            internal InfoFloor1()
-            {
-                for (int i = 0; i < class_subbook.Length; i++)
-                {
-                    class_subbook[i] = new int[8];
-                }
-            }
+			internal InfoFloor1()
+			{
+				for (int i = 0; i < class_subbook.Length; i++)
+				{
+					class_subbook[i] = new int[8];
+				}
+			}
 
-            internal void free()
-            {
-                partitionclass = null;
-                class_dim = null;
-                class_subs = null;
-                class_book = null;
-                class_subbook = null;
-                postlist = null;
-            }
+			internal void free()
+			{
+				partitionclass = null;
+				class_dim = null;
+				class_subs = null;
+				class_book = null;
+				class_subbook = null;
+				postlist = null;
+			}
 
-            internal Object copy_info()
-            {
-                InfoFloor1 info = this;
-                InfoFloor1 ret = new InfoFloor1();
+			internal Object copy_info()
+			{
+				InfoFloor1 info = this;
+				InfoFloor1 ret = new InfoFloor1();
 
-                ret.partitions = info.partitions;
-                Array.Copy(info.partitionclass, 0, ret.partitionclass, 0, VIF_PARTS);
-                Array.Copy(info.class_dim, 0, ret.class_dim, 0, VIF_CLASS);
-                Array.Copy(info.class_subs, 0, ret.class_subs, 0, VIF_CLASS);
-                Array.Copy(info.class_book, 0, ret.class_book, 0, VIF_CLASS);
+				ret.partitions = info.partitions;
+				Array.Copy(info.partitionclass, 0, ret.partitionclass, 0, VIF_PARTS);
+				Array.Copy(info.class_dim, 0, ret.class_dim, 0, VIF_CLASS);
+				Array.Copy(info.class_subs, 0, ret.class_subs, 0, VIF_CLASS);
+				Array.Copy(info.class_book, 0, ret.class_book, 0, VIF_CLASS);
 
-                for (int j = 0; j < VIF_CLASS; j++)
-                {
-                    Array.Copy(info.class_subbook[j], 0, ret.class_subbook[j], 0, 8);
-                }
+				for (int j = 0; j < VIF_CLASS; j++)
+				{
+					Array.Copy(info.class_subbook[j], 0, ret.class_subbook[j], 0, 8);
+				}
 
-                ret.mult = info.mult;
-                Array.Copy(info.postlist, 0, ret.postlist, 0, VIF_POSIT + 2);
+				ret.mult = info.mult;
+				Array.Copy(info.postlist, 0, ret.postlist, 0, VIF_POSIT + 2);
 
-                ret.maxover = info.maxover;
-                ret.maxunder = info.maxunder;
-                ret.maxerr = info.maxerr;
+				ret.maxover = info.maxover;
+				ret.maxunder = info.maxunder;
+				ret.maxerr = info.maxerr;
 
-                ret.twofitminsize = info.twofitminsize;
-                ret.twofitminused = info.twofitminused;
-                ret.twofitweight = info.twofitweight;
-                ret.twofitatten = info.twofitatten;
-                ret.unusedminsize = info.unusedminsize;
-                ret.unusedmin_n = info.unusedmin_n;
+				ret.twofitminsize = info.twofitminsize;
+				ret.twofitminused = info.twofitminused;
+				ret.twofitweight = info.twofitweight;
+				ret.twofitatten = info.twofitatten;
+				ret.unusedminsize = info.unusedminsize;
+				ret.unusedmin_n = info.unusedmin_n;
 
-                ret.n = info.n;
+				ret.n = info.n;
 
-                return (ret);
-            }
+				return (ret);
+			}
 
-        }
+		}
 
-        internal class LookFloor1
-        {
-            internal const int VIF_POSIT = 63;
+		internal class LookFloor1
+		{
+			internal const int VIF_POSIT = 63;
 
-            internal int[] sorted_index = new int[VIF_POSIT + 2];
-            internal int[] forward_index = new int[VIF_POSIT + 2];
-            internal int[] reverse_index = new int[VIF_POSIT + 2];
-            internal int[] hineighbor = new int[VIF_POSIT];
-            internal int[] loneighbor = new int[VIF_POSIT];
-            internal int posts;
+			internal int[] sorted_index = new int[VIF_POSIT + 2];
+			internal int[] forward_index = new int[VIF_POSIT + 2];
+			internal int[] reverse_index = new int[VIF_POSIT + 2];
+			internal int[] hineighbor = new int[VIF_POSIT];
+			internal int[] loneighbor = new int[VIF_POSIT];
+			internal int posts;
 
-            internal int n;
-            internal int quant_q;
-            internal InfoFloor1 vi;
+			internal int n;
+			internal int quant_q;
+			internal InfoFloor1 vi;
 
-            internal int phrasebits;
-            internal int postbits;
-            internal int frames;
+			internal int phrasebits;
+			internal int postbits;
+			internal int frames;
 
-            internal void free()
-            {
-                sorted_index = null;
-                forward_index = null;
-                reverse_index = null;
-                hineighbor = null;
-                loneighbor = null;
-            }
-        }
+			internal void free()
+			{
+				sorted_index = null;
+				forward_index = null;
+				reverse_index = null;
+				hineighbor = null;
+				loneighbor = null;
+			}
+		}
 
-        internal class Lsfit_acc
-        {
-            internal long x0;
-            internal long x1;
+		internal class Lsfit_acc
+		{
+			internal long x0;
+			internal long x1;
 
-            internal long xa;
-            internal long ya;
-            internal long x2a;
-            internal long y2a;
-            internal long xya;
-            internal long n;
-            internal long an;
-            internal long un;
-            internal long edgey0;
-            internal long edgey1;
-        }
+			internal long xa;
+			internal long ya;
+			internal long x2a;
+			internal long y2a;
+			internal long xya;
+			internal long n;
+			internal long an;
+			internal long un;
+			internal long edgey0;
+			internal long edgey1;
+		}
 
-        internal class EchstateFloor1
-        {
-            internal int[] codewords;
-            internal float[] curve;
-            internal long frameno;
-            internal long codes;
-        }
-    }
+		internal class EchstateFloor1
+		{
+			internal int[] codewords;
+			internal float[] curve;
+			internal long frameno;
+			internal long codes;
+		}
+	}
 
 }
