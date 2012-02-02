@@ -32,48 +32,56 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
-	class ChainingExample
-	{
-		public static void main(String[] arg){
-			VorbisFile ov=null;
+    class ChainingExample
+    {
+        public static void main(String[] arg)
+        {
+            VorbisFile ov = null;
 
-			try{
-			  if(arg.Length>0){
-				ov=new VorbisFile(arg[0]);
-			  }
-			  else{
-				  throw(new NotImplementedException());
-				//ov=new VorbisFile(Console.In, null, -1);
-			  }
-			}
-			catch(Exception e){
-			  Console.Error.WriteLine(e);
-			  return;
-			}
+            try
+            {
+                if (arg.Length > 0)
+                {
+                    ov = new VorbisFile(arg[0]);
+                }
+                else
+                {
+                    throw (new NotImplementedException());
+                    //ov=new VorbisFile(Console.In, null, -1);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                return;
+            }
 
-			if(ov.seekable()){
-			 Console.WriteLine("Input bitstream contained "+ov.streams()
-				  +" logical bitstream section(s).");
-			 Console.WriteLine("Total bitstream playing time: "+ov.time_total(-1)
-				  +" seconds\n");
-			}
-			else{
-			 Console.WriteLine("Standard input was not seekable.");
-			 Console.WriteLine("First logical bitstream information:\n");
-			}
+            if (ov.seekable())
+            {
+                Console.WriteLine("Input bitstream contained " + ov.streams()
+                     + " logical bitstream section(s).");
+                Console.WriteLine("Total bitstream playing time: " + ov.time_total(-1)
+                     + " seconds\n");
+            }
+            else
+            {
+                Console.WriteLine("Standard input was not seekable.");
+                Console.WriteLine("First logical bitstream information:\n");
+            }
 
-			for(int i=0; i<ov.streams(); i++){
-			  Info vi=ov.getInfo(i);
-			 Console.WriteLine("\tlogical bitstream section "+(i+1)+" information:");
-			 Console.WriteLine("\t\t"+vi.rate+"Hz "+vi.channels+" channels bitrate "
-				  +(ov.bitrate(i)/1000)+"kbps serial number="+ov.serialnumber(i));
-			  Console.Write("\t\tcompressed length: "+ov.raw_total(i)+" bytes ");
-			 Console.WriteLine(" play time: "+ov.time_total(i)+"s");
-			  Comment vc=ov.getComment(i);
-			 Console.WriteLine(vc);
-			}
-			//ov.clear();
-		}
-	}
+            for (int i = 0; i < ov.streams(); i++)
+            {
+                Info vi = ov.getInfo(i);
+                Console.WriteLine("\tlogical bitstream section " + (i + 1) + " information:");
+                Console.WriteLine("\t\t" + vi.rate + "Hz " + vi.channels + " channels bitrate "
+                     + (ov.bitrate(i) / 1000) + "kbps serial number=" + ov.serialnumber(i));
+                Console.Write("\t\tcompressed length: " + ov.raw_total(i) + " bytes ");
+                Console.WriteLine(" play time: " + ov.time_total(i) + "s");
+                Comment vc = ov.getComment(i);
+                Console.WriteLine(vc);
+            }
+            //ov.clear();
+        }
+    }
 
 }

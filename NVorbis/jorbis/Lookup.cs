@@ -5,9 +5,10 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
-	class Lookup{
-		internal const int COS_LOOKUP_SZ = 128;
-		static internal readonly float[] COS_LOOKUP = {+1.0000000000000f, +0.9996988186962f,
+    class Lookup
+    {
+        internal const int COS_LOOKUP_SZ = 128;
+        static internal readonly float[] COS_LOOKUP = {+1.0000000000000f, +0.9996988186962f,
 		  +0.9987954562052f, +0.9972904566787f, +0.9951847266722f,
 		  +0.9924795345987f, +0.9891765099648f, +0.9852776423889f,
 		  +0.9807852804032f, +0.9757021300385f, +0.9700312531945f,
@@ -52,15 +53,16 @@ namespace NVorbis.jorbis
 		  -0.9972904566787f, -0.9987954562052f, -0.9996988186962f,
 		  -1.0000000000000f,};
 
-	  /* interpolated lookup based cos function, domain 0 to PI only */
-	  static internal float coslook(float a){
-		double d=a*(.31830989*(float)COS_LOOKUP_SZ);
-		int i=(int)d;
-		return COS_LOOKUP[i]+((float)(d-i))*(COS_LOOKUP[i+1]-COS_LOOKUP[i]);
-	  }
+        /* interpolated lookup based cos function, domain 0 to PI only */
+        static internal float coslook(float a)
+        {
+            double d = a * (.31830989 * (float)COS_LOOKUP_SZ);
+            int i = (int)d;
+            return COS_LOOKUP[i] + ((float)(d - i)) * (COS_LOOKUP[i + 1] - COS_LOOKUP[i]);
+        }
 
-	  internal const int INVSQ_LOOKUP_SZ=32;
-	  static internal readonly float[] INVSQ_LOOKUP = {1.414213562373f, 1.392621247646f,
+        internal const int INVSQ_LOOKUP_SZ = 32;
+        static internal readonly float[] INVSQ_LOOKUP = {1.414213562373f, 1.392621247646f,
 		  1.371988681140f, 1.352246807566f, 1.333333333333f, 1.315191898443f,
 		  1.297771369046f, 1.281025230441f, 1.264911064067f, 1.249390095109f,
 		  1.234426799697f, 1.219988562661f, 1.206045378311f, 1.192569588000f,
@@ -70,17 +72,17 @@ namespace NVorbis.jorbis
 		  1.050451462878f, 1.041511287847f, 1.032795558989f, 1.024295039463f,
 		  1.016001016002f, 1.007905261358f, 1.000000000000f,};
 
-	  /* interpolated 1./sqrt(p) where .5 <= p < 1. */
-	  static internal float invsqlook(float a)
-	  {
-		double d=a*(2.0f*(float)INVSQ_LOOKUP_SZ)-(float)INVSQ_LOOKUP_SZ;
-		int i=(int)d;
-		return INVSQ_LOOKUP[i]+((float)(d-i))*(INVSQ_LOOKUP[i+1]-INVSQ_LOOKUP[i]);
-	  }
+        /* interpolated 1./sqrt(p) where .5 <= p < 1. */
+        static internal float invsqlook(float a)
+        {
+            double d = a * (2.0f * (float)INVSQ_LOOKUP_SZ) - (float)INVSQ_LOOKUP_SZ;
+            int i = (int)d;
+            return INVSQ_LOOKUP[i] + ((float)(d - i)) * (INVSQ_LOOKUP[i + 1] - INVSQ_LOOKUP[i]);
+        }
 
-	  internal const int INVSQ2EXP_LOOKUP_MIN=-32;
-	  internal const int INVSQ2EXP_LOOKUP_MAX=32;
-	  static internal readonly float[] INVSQ2EXP_LOOKUP = {65536.0f, 46340.95001f, 32768.0f,
+        internal const int INVSQ2EXP_LOOKUP_MIN = -32;
+        internal const int INVSQ2EXP_LOOKUP_MAX = 32;
+        static internal readonly float[] INVSQ2EXP_LOOKUP = {65536.0f, 46340.95001f, 32768.0f,
 		  23170.47501f, 16384.0f, 11585.2375f, 8192.0f, 5792.618751f, 4096.0f,
 		  2896.309376f, 2048.0f, 1448.154688f, 1024.0f, 724.0773439f, 512.0f,
 		  362.038672f, 256.0f, 181.019336f, 128.0f, 90.50966799f, 64.0f, 45.254834f,
@@ -94,18 +96,18 @@ namespace NVorbis.jorbis
 		  8.631674575e-05f, 6.103515625e-05f, 4.315837288e-05f, 3.051757812e-05f,
 		  2.157918644e-05f, 1.525878906e-05f,};
 
-	  /* interpolated 1./sqrt(p) where .5 <= p < 1. */
-	  static internal float invsq2explook(int a)
-	  {
-		return INVSQ2EXP_LOOKUP[a-INVSQ2EXP_LOOKUP_MIN];
-	  }
+        /* interpolated 1./sqrt(p) where .5 <= p < 1. */
+        static internal float invsq2explook(int a)
+        {
+            return INVSQ2EXP_LOOKUP[a - INVSQ2EXP_LOOKUP_MIN];
+        }
 
-	  internal const int FROMdB_LOOKUP_SZ=35;
-	  internal const int FROMdB2_LOOKUP_SZ=32;
-	  internal const int FROMdB_SHIFT=5;
-	  internal const int FROMdB2_SHIFT=3;
-	  internal const int FROMdB2_MASK=31;
-	  static internal readonly float[] FROMdB_LOOKUP = {1.0f, 0.6309573445f, 0.3981071706f,
+        internal const int FROMdB_LOOKUP_SZ = 35;
+        internal const int FROMdB2_LOOKUP_SZ = 32;
+        internal const int FROMdB_SHIFT = 5;
+        internal const int FROMdB2_SHIFT = 3;
+        internal const int FROMdB2_MASK = 31;
+        static internal readonly float[] FROMdB_LOOKUP = {1.0f, 0.6309573445f, 0.3981071706f,
 		  0.2511886432f, 0.1584893192f, 0.1f, 0.06309573445f, 0.03981071706f,
 		  0.02511886432f, 0.01584893192f, 0.01f, 0.006309573445f, 0.003981071706f,
 		  0.002511886432f, 0.001584893192f, 0.001f, 0.0006309573445f,
@@ -114,7 +116,7 @@ namespace NVorbis.jorbis
 		  1e-05f, 6.309573445e-06f, 3.981071706e-06f, 2.511886432e-06f,
 		  1.584893192e-06f, 1e-06f, 6.309573445e-07f, 3.981071706e-07f,
 		  2.511886432e-07f, 1.584893192e-07f,};
-	  static internal readonly float[] FROMdB2_LOOKUP = {0.9928302478f, 0.9786445908f,
+        static internal readonly float[] FROMdB2_LOOKUP = {0.9928302478f, 0.9786445908f,
 		  0.9646616199f, 0.9508784391f, 0.9372921937f, 0.92390007f, 0.9106992942f,
 		  0.8976871324f, 0.8848608897f, 0.8722179097f, 0.8597555737f,
 		  0.8474713009f, 0.835362547f, 0.8234268041f, 0.8116616003f, 0.8000644989f,
@@ -123,13 +125,14 @@ namespace NVorbis.jorbis
 		  0.6928273125f, 0.6829281272f, 0.6731703824f, 0.6635520573f,
 		  0.6540711597f, 0.6447257262f, 0.6355138211f,};
 
-	  /* interpolated lookup based fromdB function, domain -140dB to 0dB only */
-	  static internal float fromdBlook(float a){
-		int i=(int)(a*((float)(-(1<<FROMdB2_SHIFT))));
-		return (i<0) ? 1.0f : ((i>=(FROMdB_LOOKUP_SZ<<FROMdB_SHIFT)) ? 0.0f
-			: FROMdB_LOOKUP[((uint)i)>>FROMdB_SHIFT]*FROMdB2_LOOKUP[i&FROMdB2_MASK]);
-	  }
+        /* interpolated lookup based fromdB function, domain -140dB to 0dB only */
+        static internal float fromdBlook(float a)
+        {
+            int i = (int)(a * ((float)(-(1 << FROMdB2_SHIFT))));
+            return (i < 0) ? 1.0f : ((i >= (FROMdB_LOOKUP_SZ << FROMdB_SHIFT)) ? 0.0f
+                : FROMdB_LOOKUP[((uint)i) >> FROMdB_SHIFT] * FROMdB2_LOOKUP[i & FROMdB2_MASK]);
+        }
 
-	}
+    }
 
 }

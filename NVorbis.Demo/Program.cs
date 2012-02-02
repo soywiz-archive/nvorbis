@@ -8,12 +8,12 @@ using NVorbis.jorbis.Examples;
 
 namespace NVorbis.Demo
 {
-	public class Program
-	{
-		static public void Main(string[] Args)
-		{
-			DecodeExample.main(new string[] { @"..\..\..\TestInput\match0.ogg" });
-			Console.ReadKey();
-		}
-	}
+    public class Program
+    {
+        static public void Main(string[] Args)
+        {
+            DecodeExample.main(new string[] { @"..\..\..\TestInput\match0.ogg" });
+            Console.ReadKey();
+        }
+    }
 }
