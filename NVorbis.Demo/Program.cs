@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NVorbis.jorbis;
-using NVorbis.jorbis.Examples;
+using NVorbis.Vorbis;
+using NVorbis.Vorbis.Examples;
 
 namespace NVorbis.Demo
 {

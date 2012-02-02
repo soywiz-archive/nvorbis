@@ -3,7 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NVorbis.jorbis.Examples;
+using NVorbis.Vorbis.Examples;
 using System.IO;
 
 namespace NVorvis.Test

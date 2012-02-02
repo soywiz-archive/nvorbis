@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NVorbis.jogg;
+using NVorbis.Ogg;
 using NVorbis.Extra;
 
-namespace NVorbis.jorbis.Examples
+namespace NVorbis.Vorbis.Examples
 {
 	// Takes a vorbis bitstream from stdin and writes raw stereo PCM to
 	// stdout.  Decodes simple and chained OggVorbis files from beginning
@@ -80,7 +80,6 @@ namespace NVorbis.jorbis.Examples
 				catch (Exception e)
 				{
 					Console.Error.WriteLine(e);
-					//Environment.Exit(-1);
 					return;
 				}
 				SyncState.wrote(bytes);
@@ -96,7 +95,6 @@ namespace NVorbis.jorbis.Examples
 					//File.WriteAllBytes();
 					// error case.  Must not be Vorbis data
 					Console.Error.WriteLine("Input does not appear to be an Ogg bitstream.");
-					//Environment.Exit(1);
 					return;
 				}
 
@@ -117,22 +115,19 @@ namespace NVorbis.jorbis.Examples
 				if (StreamState.pagein(Page) < 0)
 				{
 					// error; stream version mismatch perhaps
-					Console.Error.WriteLine("Error reading first page of Ogg bitstream data.");
-					Environment.Exit(1);
+					throw (new Exception("Error reading first page of Ogg bitstream data."));
 				}
 
 				if (StreamState.PacketOut(Packet) != 1)
 				{
 					// no page? must not be vorbis
-					Console.Error.WriteLine("Error reading initial header packet.");
-					Environment.Exit(1);
+					throw (new Exception("Error reading initial header packet."));
 				}
 
 				if (Info.synthesis_headerin(Comment, Packet) < 0)
 				{
 					// error case; not a vorbis header
-					Console.Error.WriteLine("This Ogg bitstream does not contain Vorbis audio data.");
-					Environment.Exit(1);
+					throw (new Exception("This Ogg bitstream does not contain Vorbis audio data."));
 				}
 
 				// At this point, we're sure we're Vorbis.  We've set up the logical
@@ -171,8 +166,7 @@ namespace NVorbis.jorbis.Examples
 								{
 									// Uh oh; data at some point was corrupted or missing!
 									// We can't tolerate that in a header.  Die.
-									Console.Error.WriteLine("Corrupt secondary header.  Exiting.");
-									Environment.Exit(1);
+									throw(new Exception("Corrupt secondary header.  Exiting."));
 								}
 								Info.synthesis_headerin(Comment, Packet);
 								i++;
@@ -188,13 +182,11 @@ namespace NVorbis.jorbis.Examples
 					}
 					catch (Exception e)
 					{
-						Console.Error.WriteLine(e);
-						Environment.Exit(1);
+						throw(new Exception("Exception", e));
 					}
 					if (bytes == 0 && i < 2)
 					{
-						Console.Error.WriteLine("End of file before finding all Vorbis headers!");
-						Environment.Exit(1);
+						throw(new Exception("End of file before finding all Vorbis headers!"));
 					}
 					SyncState.wrote(bytes);
 				}
@@ -209,10 +201,10 @@ namespace NVorbis.jorbis.Examples
 							break;
 						Console.Error.WriteLine(Util.InternalEncoding.GetString(ptr[j], 0, ptr[j].Length - 1));
 					}
-					Console.Error.WriteLine("\nBitstream is " + Info.channels + " channel, " + Info.rate
-						+ "Hz");
-					Console.Error.WriteLine("Encoded by: "
-						+ Util.InternalEncoding.GetString(Comment.vendor, 0, Comment.vendor.Length - 1) + "\n");
+					Console.Error.WriteLine("\nBitstream is {0} channel, {1}Hz", Info.channels, Info.rate);
+					Console.Error.WriteLine(
+						"Encoded by: {0}\n",
+						Util.InternalEncoding.GetString(Comment.vendor, 0, Comment.vendor.Length - 1));
 				}
 
 				convsize = 4096 / Info.channels;
@@ -328,12 +320,10 @@ namespace NVorbis.jorbis.Examples
 						}
 						catch (Exception e)
 						{
-							Console.Error.WriteLine(e);
-							Environment.Exit(1);
+							throw(new Exception("Exception", e));
 						}
 						SyncState.wrote(bytes);
-						if (bytes == 0)
-							eos = 1;
+						if (bytes == 0) eos = 1;
 					}
 				}
 
