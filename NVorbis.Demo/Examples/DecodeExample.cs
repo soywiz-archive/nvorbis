@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CSPspEmu.Hle.Formats.audio;
 using NVorbis.jogg;
+using NVorbis.Extra;
 
 namespace NVorbis.jorbis.Examples
 {
@@ -12,7 +12,7 @@ namespace NVorbis.jorbis.Examples
 	// stdout.  Decodes simple and chained OggVorbis files from beginning
 	// to end.  Vorbisfile.a is somewhat more complex than the code below.
 
-	class DecodeExample
+	public class DecodeExample
 	{
 		static int convsize = 4096 * 2;
 		static byte[] convbuffer = new byte[convsize]; // take 8k out of the data segment, not the stack
@@ -20,13 +20,15 @@ namespace NVorbis.jorbis.Examples
 		public static void main(String[] arg)
 		{
 			//Stream output = File.OpenWrite("output.bin");
+            var Name = "Output.ogg";
 			var OutputBuffer = new MemoryStream();
 			Stream input = null;
 			//java.io.InputStream input=System.In;
 			if (arg.Length > 0)
 			{
 				try{
-					input = File.OpenRead(arg[0]);
+                    Name = arg[0];
+                    input = File.OpenRead(arg[0]);
 				} catch (Exception e) {
 					Console.Error.WriteLine(e);
 				}
@@ -317,7 +319,7 @@ namespace NVorbis.jorbis.Examples
     SyncState.clear();
 
 	var WaveStream = new WaveStream();
-	var WaveOutputStream = File.OpenWrite("output2.wav");
+	var WaveOutputStream = File.OpenWrite(Name + ".wav");
 	OutputBuffer.Position = 0;
 	WaveStream.WriteWave(WaveOutputStream, () =>
 	{

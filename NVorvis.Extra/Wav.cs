@@ -4,10 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using CSharpUtils.Extensions;
-using CSharpUtils.Streams;
 
-namespace CSPspEmu.Hle.Formats.audio
+namespace NVorbis.Extra
 {
 	public class WaveStream
 	{
@@ -59,15 +57,18 @@ namespace CSPspEmu.Hle.Formats.audio
 
 		protected void WriteChunk(string Name, Action Writer)
 		{
-			Stream.WriteStringz(Name, 4, Encoding.ASCII);
+            Stream.Write(Encoding.ASCII.GetBytes(Name), 0, 4);
+            var SizePosition = Stream.Position;
 			BinaryWriter.Write((uint)0);
-			var ChunkSizeStream = SliceStream.CreateWithLength(Stream, Stream.Position - 4, 4);
 			var BackPosition = Stream.Position;
 			{
 				Writer();
 			}
 			var ChunkLength = Stream.Position - BackPosition;
-			new BinaryWriter(ChunkSizeStream).Write((uint)ChunkLength);
+            var RestorePosition = Stream.Position;
+            Stream.Position = SizePosition;
+			BinaryWriter.Write((uint)ChunkLength);
+            Stream.Position = RestorePosition;
 		}
 
 		public void WriteWave(String FileName, short[] Samples)
@@ -99,10 +100,18 @@ namespace CSPspEmu.Hle.Formats.audio
 
 			WriteChunk("RIFF", () =>
 			{
-				Stream.WriteStringz("WAVE", 4, Encoding.ASCII);
+                Stream.Write(Encoding.ASCII.GetBytes("WAVE"), 0, 4);
 				WriteChunk("fmt ", () =>
 				{
-					Stream.WriteStruct(WaveFormat);
+					//Stream.WriteStruct(WaveFormat);
+                    var BinaryWriter = new BinaryWriter(Stream);
+                    BinaryWriter.Write(WaveFormat.CompressionCode);
+                    BinaryWriter.Write(WaveFormat.NumberOfChannels);
+                    BinaryWriter.Write(WaveFormat.SampleRate);
+                    BinaryWriter.Write(WaveFormat.BytesPerSecond);
+                    BinaryWriter.Write(WaveFormat.BlockAlignment);
+                    BinaryWriter.Write(WaveFormat.BitsPerSample);
+                    BinaryWriter.Write(WaveFormat.Padding);
 				});
 				WriteChunk("data", () =>
 				{

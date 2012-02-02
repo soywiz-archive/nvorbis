@@ -1,3 +1,11 @@
 
 /NVorbis/obj
 /NVorbis/bin
+*.wav
+/NVorbis.Demo/obj
+/NVorbis.Demo/bin
+/NVorvis.Extra/obj
+/NVorvis.Extra/bin
+/NVorvis.Test/obj
+/NVorvis.Test/bin
+*.suo

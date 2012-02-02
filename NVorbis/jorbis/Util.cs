@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
-	unsafe internal class Util
+	unsafe public class Util
 	{
 		static internal int ilog(int _v)
 		{
@@ -64,7 +64,7 @@ namespace NVorbis.jorbis
 			}
 		}
 
-		static internal Encoding InternalEncoding
+		static public Encoding InternalEncoding
 		{
 			get
 			{
