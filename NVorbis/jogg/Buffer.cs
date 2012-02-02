@@ -9,12 +9,17 @@ namespace NVorbis.jogg
 	{
 		private const int BUFFER_INCREMENT = 256;
 
-		private readonly uint[] mask = {0x00000000, 0x00000001, 0x00000003,
-		  0x00000007, 0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff,
-		  0x000001ff, 0x000003ff, 0x000007ff, 0x00000fff, 0x00001fff, 0x00003fff,
-		  0x00007fff, 0x0000ffff, 0x0001ffff, 0x0003ffff, 0x0007ffff, 0x000fffff,
-		  0x001fffff, 0x003fffff, 0x007fffff, 0x00ffffff, 0x01ffffff, 0x03ffffff,
-		  0x07ffffff, 0x0fffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff};
+		private readonly uint[] Mask = {
+			0x00000000, 0x00000001, 0x00000003, 0x00000007,
+			0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
+			0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
+			0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff,
+			0x0000ffff, 0x0001ffff, 0x0003ffff, 0x0007ffff,
+			0x000fffff, 0x001fffff, 0x003fffff, 0x007fffff,
+			0x00ffffff, 0x01ffffff, 0x03ffffff, 0x07ffffff,
+			0x0fffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff,
+			0xffffffff
+		};
 
 		int ptr = 0;
 		byte[] _buffer = null;
@@ -22,7 +27,7 @@ namespace NVorbis.jogg
 		int endbyte = 0;
 		int storage = 0;
 
-		public void writeinit()
+		public void WriteInit()
 		{
 			_buffer = new byte[BUFFER_INCREMENT];
 			ptr = 0;
@@ -30,43 +35,42 @@ namespace NVorbis.jogg
 			storage = BUFFER_INCREMENT;
 		}
 
-		public void write(byte[] s)
+		public void Write(byte[] Data)
 		{
-			for (int i = 0; i < s.Length; i++)
+			for (int i = 0; i < Data.Length; i++)
 			{
-				if (s[i] == 0)
-					break;
-				write(s[i], 8);
+				if (Data[i] == 0) break;
+				Write(Data[i], 8);
 			}
 		}
 
-		public void read(byte[] s, int bytes)
+		public void Read(byte[] s, int bytes)
 		{
 			int i = 0;
 			while (bytes-- != 0)
 			{
-				s[i++] = (byte)(read(8));
+				s[i++] = (byte)(Read(8));
 			}
 		}
 
-		void reset()
+		void Reset()
 		{
 			ptr = 0;
 			_buffer[0] = (byte)'\0';
 			endbit = endbyte = 0;
 		}
 
-		public void writeclear()
+		public void WriteClear()
 		{
 			_buffer = null;
 		}
 
-		public void readinit(byte[] buf, int bytes)
+		public void ReadInit(byte[] buf, int bytes)
 		{
-			readinit(buf, 0, bytes);
+			ReadInit(buf, 0, bytes);
 		}
 
-		public void readinit(byte[] buf, int start, int bytes)
+		public void ReadInit(byte[] buf, int start, int bytes)
 		{
 			ptr = start;
 			_buffer = buf;
@@ -74,7 +78,7 @@ namespace NVorbis.jogg
 			storage = bytes;
 		}
 
-		public void write(int _value, int bits)
+		public void Write(int _value, int bits)
 		{
 			uint value = (uint)_value;
 			if (endbyte + 4 >= storage)
@@ -85,7 +89,7 @@ namespace NVorbis.jogg
 				storage += BUFFER_INCREMENT;
 			}
 
-			value &= mask[bits];
+			value &= Mask[bits];
 			bits += endbit;
 			_buffer[ptr] |= (byte)(value << endbit);
 
@@ -114,10 +118,10 @@ namespace NVorbis.jogg
 			endbit = bits & 7;
 		}
 
-		public int look(int bits)
+		public int Look(int bits)
 		{
 			int ret;
-			uint m = mask[bits];
+			uint m = Mask[bits];
 
 			bits += endbit;
 
@@ -147,10 +151,9 @@ namespace NVorbis.jogg
 			return (int)(m & ret);
 		}
 
-		public int look1()
+		public int Look1()
 		{
-			if (endbyte >= storage)
-				return (-1);
+			if (endbyte >= storage) return (-1);
 			return ((_buffer[ptr] >> endbit) & 1);
 		}
 
@@ -173,36 +176,36 @@ namespace NVorbis.jogg
 			}
 		}
 
-		public int read(int bits)
+		public int Read(int Bits)
 		{
 			uint ret;
-			uint m = mask[bits];
+			uint m = Mask[Bits];
 
-			bits += endbit;
+			Bits += endbit;
 
 			if (endbyte + 4 >= storage)
 			{
 				ret = unchecked((uint)-1);
-				if (endbyte + (bits - 1) / 8 >= storage)
+				if (endbyte + (Bits - 1) / 8 >= storage)
 				{
-					ptr += bits / 8;
-					endbyte += bits / 8;
-					endbit = bits & 7;
+					ptr += Bits / 8;
+					endbyte += Bits / 8;
+					endbit = Bits & 7;
 					return (int)(ret);
 				}
 			}
 
 			ret = (uint)((_buffer[ptr]) & 0xff) >> endbit;
-			if (bits > 8)
+			if (Bits > 8)
 			{
 				ret |= (uint)((_buffer[ptr + 1]) & 0xff) << (8 - endbit);
-				if (bits > 16)
+				if (Bits > 16)
 				{
 					ret |= (uint)((_buffer[ptr + 2]) & 0xff) << (16 - endbit);
-					if (bits > 24)
+					if (Bits > 24)
 					{
 						ret |= (uint)((_buffer[ptr + 3]) & 0xff) << (24 - endbit);
-						if (bits > 32 && endbit != 0)
+						if (Bits > 32 && endbit != 0)
 						{
 							ret |= (uint)((_buffer[ptr + 4]) & 0xff) << (32 - endbit);
 						}
@@ -212,13 +215,13 @@ namespace NVorbis.jogg
 
 			ret &= m;
 
-			ptr += bits / 8;
-			endbyte += bits / 8;
-			endbit = bits & 7;
+			ptr += Bits / 8;
+			endbyte += Bits / 8;
+			endbit = Bits & 7;
 			return (int)(ret);
 		}
 
-		public int readB(int bits)
+		public int ReadB(int bits)
 		{
 			int ret;
 			int m = 32 - bits;
@@ -264,7 +267,7 @@ namespace NVorbis.jogg
 			return (ret);
 		}
 
-		public int read1()
+		public int Read1()
 		{
 			int ret;
 			if (endbyte >= storage)
@@ -318,7 +321,7 @@ namespace NVorbis.jogg
 			return (ret);
 		}
 
-		public static void report(String In)
+		public static void Report(String In)
 		{
 			Console.Error.WriteLine(In);
 			Environment.Exit(1);

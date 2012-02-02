@@ -7,7 +7,7 @@ namespace NVorbis.jorbis
 {
 	class Mapping0 : FuncMapping
 	{
-		static int seq = 0;
+		//static int seq = 0;
 
 		override internal void free_info(Object imap)
 		{
@@ -50,10 +50,12 @@ namespace NVorbis.jorbis
 
 			}
 
+			/*
 			if (vi.psys != 0 && vd.analysisp != 0)
 			{
 				// ??
 			}
+			*/
 
 			look.ch = vi.channels;
 
@@ -73,42 +75,42 @@ namespace NVorbis.jorbis
 
 			if (info.submaps > 1)
 			{
-				opb.write(1, 1);
-				opb.write(info.submaps - 1, 4);
+				opb.Write(1, 1);
+				opb.Write(info.submaps - 1, 4);
 			}
 			else
 			{
-				opb.write(0, 1);
+				opb.Write(0, 1);
 			}
 
 			if (info.coupling_steps > 0)
 			{
-				opb.write(1, 1);
-				opb.write(info.coupling_steps - 1, 8);
+				opb.Write(1, 1);
+				opb.Write(info.coupling_steps - 1, 8);
 				for (int i = 0; i < info.coupling_steps; i++)
 				{
-					opb.write(info.coupling_mag[i], Util.ilog2(vi.channels));
-					opb.write(info.coupling_ang[i], Util.ilog2(vi.channels));
+					opb.Write(info.coupling_mag[i], Util.ilog2(vi.channels));
+					opb.Write(info.coupling_ang[i], Util.ilog2(vi.channels));
 				}
 			}
 			else
 			{
-				opb.write(0, 1);
+				opb.Write(0, 1);
 			}
 
-			opb.write(0, 2); /* 2,3:reserved */
+			opb.Write(0, 2); /* 2,3:reserved */
 
 			/* we don't write the channel submappings if we only have one... */
 			if (info.submaps > 1)
 			{
 				for (int i = 0; i < vi.channels; i++)
-					opb.write(info.chmuxlist[i], 4);
+					opb.Write(info.chmuxlist[i], 4);
 			}
 			for (int i = 0; i < info.submaps; i++)
 			{
-				opb.write(info.timesubmap[i], 8);
-				opb.write(info.floorsubmap[i], 8);
-				opb.write(info.residuesubmap[i], 8);
+				opb.Write(info.timesubmap[i], 8);
+				opb.Write(info.floorsubmap[i], 8);
+				opb.Write(info.residuesubmap[i], 8);
 			}
 		}
 
@@ -117,23 +119,23 @@ namespace NVorbis.jorbis
 		{
 			InfoMapping0 info = new InfoMapping0();
 
-			if (opb.read(1) != 0)
+			if (opb.Read(1) != 0)
 			{
-				info.submaps = opb.read(4) + 1;
+				info.submaps = opb.Read(4) + 1;
 			}
 			else
 			{
 				info.submaps = 1;
 			}
 
-			if (opb.read(1) != 0)
+			if (opb.Read(1) != 0)
 			{
-				info.coupling_steps = opb.read(8) + 1;
+				info.coupling_steps = opb.Read(8) + 1;
 
 				for (int i = 0; i < info.coupling_steps; i++)
 				{
-					int testM = info.coupling_mag[i] = opb.read(Util.ilog2(vi.channels));
-					int testA = info.coupling_ang[i] = opb.read(Util.ilog2(vi.channels));
+					int testM = info.coupling_mag[i] = opb.Read(Util.ilog2(vi.channels));
+					int testA = info.coupling_ang[i] = opb.Read(Util.ilog2(vi.channels));
 
 					if (testM < 0 || testA < 0 || testM == testA || testM >= vi.channels
 						|| testA >= vi.channels)
@@ -145,7 +147,7 @@ namespace NVorbis.jorbis
 				}
 			}
 
-			if (opb.read(2) > 0)
+			if (opb.Read(2) > 0)
 			{ /* 2,3:reserved */
 				info.free();
 				return (null);
@@ -155,7 +157,7 @@ namespace NVorbis.jorbis
 			{
 				for (int i = 0; i < vi.channels; i++)
 				{
-					info.chmuxlist[i] = opb.read(4);
+					info.chmuxlist[i] = opb.Read(4);
 					if (info.chmuxlist[i] >= info.submaps)
 					{
 						info.free();
@@ -166,19 +168,19 @@ namespace NVorbis.jorbis
 
 			for (int i = 0; i < info.submaps; i++)
 			{
-				info.timesubmap[i] = opb.read(8);
+				info.timesubmap[i] = opb.Read(8);
 				if (info.timesubmap[i] >= vi.times)
 				{
 					info.free();
 					return (null);
 				}
-				info.floorsubmap[i] = opb.read(8);
+				info.floorsubmap[i] = opb.Read(8);
 				if (info.floorsubmap[i] >= vi.floors)
 				{
 					info.free();
 					return (null);
 				}
-				info.residuesubmap[i] = opb.read(8);
+				info.residuesubmap[i] = opb.Read(8);
 				if (info.residuesubmap[i] >= vi.residues)
 				{
 					info.free();
@@ -397,17 +399,18 @@ namespace NVorbis.jorbis
 			internal InfoMapping0 map;
 			internal Object[] time_look;
 			internal Object[] floor_look;
-			internal Object[] floor_state;
+			//internal Object[] floor_state;
+
 			internal Object[] residue_look;
-			internal PsyLook[] psy_look;
+			//internal PsyLook[] psy_look;
 
 			internal FuncTime[] time_func;
 			internal FuncFloor[] floor_func;
 			internal FuncResidue[] residue_func;
 
 			internal int ch;
-			internal float[][] decay;
-			internal int lastframe; // if a different mode is called, we need to 
+			//internal float[][] decay;
+			//internal int lastframe; // if a different mode is called, we need to 
 			// invalidate decay and floor state
 		}
 

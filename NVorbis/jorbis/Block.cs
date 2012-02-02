@@ -50,18 +50,20 @@ namespace NVorbis.jorbis
 		internal DspState vd; // For read-only access of configuration
 
 		// bitmetrics for the frame
-		internal int glue_bits;
-		internal int time_bits;
-		internal int floor_bits;
-		internal int res_bits;
+		internal int glue_bits = 0;
+		internal int time_bits = 0;
+		internal int floor_bits = 0;
+		internal int res_bits = 0;
 
 		public Block(DspState vd)
 		{
 			this.vd = vd;
+			/*
 			if (vd.analysisp != 0)
 			{
-				opb.writeinit();
+				opb.WriteInit();
 			}
+			*/
 		}
 
 		public void init(DspState vd)
@@ -71,13 +73,15 @@ namespace NVorbis.jorbis
 
 		public int clear()
 		{
+			/*
 			if (vd != null)
 			{
 				if (vd.analysisp != 0)
 				{
-					opb.writeclear();
+					opb.WriteClear();
 				}
 			}
+			*/
 			return (0);
 		}
 
@@ -86,17 +90,17 @@ namespace NVorbis.jorbis
 			Info vi = vd.vi;
 
 			// first things first.  Make sure decode is ready
-			opb.readinit(op.packet_base, op.packet, op.bytes);
+			opb.ReadInit(op.packet_base, op.packet, op.bytes);
 
 			// Check the packet type
-			if (opb.read(1) != 0)
+			if (opb.Read(1) != 0)
 			{
 				// Oops.  This is not an audio data packet
 				return (-1);
 			}
 
 			// read our mode and pre/post windowsize
-			int _mode = opb.read(vd.modebits);
+			int _mode = opb.Read(vd.modebits);
 			if (_mode == -1)
 				return (-1);
 
@@ -104,8 +108,8 @@ namespace NVorbis.jorbis
 			W = vi.mode_param[mode].blockflag;
 			if (W != 0)
 			{
-				lW = opb.read(1);
-				nW = opb.read(1);
+				lW = opb.Read(1);
+				nW = opb.Read(1);
 				if (nW == -1)
 					return (-1);
 			}

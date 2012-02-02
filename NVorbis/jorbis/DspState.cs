@@ -37,7 +37,7 @@ namespace NVorbis.jorbis
 		internal const int VI_TRANSFORMB = 1;
 		internal const int VI_WINDOWB = 1;
 
-		internal int analysisp;
+		//internal int analysisp;
 		internal Info vi;
 		internal int modebits;
 
@@ -46,9 +46,10 @@ namespace NVorbis.jorbis
 		internal int pcm_current;
 		internal int pcm_returned;
 
-		internal float[] multipliers;
-		internal int envelope_storage;
-		internal int envelope_current;
+		//internal float[] multipliers;
+
+		//internal int envelope_storage;
+		//internal int envelope_current;
 
 		internal int eofflag;
 
@@ -76,9 +77,11 @@ namespace NVorbis.jorbis
 		// application does not need to worry about freeing some packets'
 		// memory and not others'; packet storage is always tracked.
 		// Cleared next call to a _dsp_ function
+		/*
 		internal byte[] header;
 		internal byte[] header1;
 		internal byte[] header2;
+		*/
 
 		public DspState()
 		{

@@ -12,15 +12,17 @@ namespace NVorbis.jorbis
 		internal StaticCodeBook c = new StaticCodeBook();
 
 		internal float[] valuelist; // list of dim*entries actual entry values
-		internal int[] codelist; // list of bitstream codewords for each entry
+		//internal int[] codelist; // list of bitstream codewords for each entry
 		internal DecodeAux decode_tree;
 
 		// returns the number of bits
+		/*
 		internal int encode(int a, NVorbis.jogg.Buffer b)
 		{
-			b.write(codelist[a], c.lengthlist[a]);
+			b.Write(codelist[a], c.lengthlist[a]);
 			return (c.lengthlist[a]);
 		}
+		*/
 
 		// One the encode side, our vector writers are each designed for a
 		// specific purpose, and the encoder is not flexible without modification:
@@ -48,6 +50,7 @@ namespace NVorbis.jorbis
 		}
 
 		// returns the number of bits and *modifies a* to the quantization value
+		/*
 		internal int encodev(int best, float[] a, NVorbis.jogg.Buffer b)
 		{
 			for (int k = 0; k < dim; k++)
@@ -64,6 +67,7 @@ namespace NVorbis.jorbis
 			int best = besterror(a, step, addmul);
 			return (this.encode(best, b));
 		}
+		*/
 
 		private int[] t = new int[15]; // decodevs_add is synchronized for re-using t.
 
@@ -224,7 +228,7 @@ namespace NVorbis.jorbis
 		{
 			int ptr = 0;
 			DecodeAux t = decode_tree;
-			int lok = b.look(t.tabn);
+			int lok = b.Look(t.tabn);
 
 			if (lok >= 0)
 			{
@@ -237,7 +241,7 @@ namespace NVorbis.jorbis
 			}
 			do
 			{
-				switch (b.read1())
+				switch (b.Read1())
 				{
 					case 0:
 						ptr = t.ptr0[ptr];

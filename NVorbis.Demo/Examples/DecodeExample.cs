@@ -58,7 +58,7 @@ namespace NVorbis.jorbis.Examples
 
 			// Decode setup
 
-			SyncState.init(); // Now we can read pages
+			SyncState.Init(); // Now we can read pages
 
 			// we repeat if the bitstream is chained
 			while (true)
@@ -71,8 +71,8 @@ namespace NVorbis.jorbis.Examples
 				// serialno.
 
 				// submit a 4k block to libvorbis' Ogg layer
-				int index = SyncState.buffer(4096);
-				buffer = SyncState.data;
+				int index = SyncState.Buffer(4096);
+				buffer = SyncState.Data;
 				try
 				{
 					bytes = input.Read(buffer, index, 4096);
@@ -86,7 +86,7 @@ namespace NVorbis.jorbis.Examples
 				SyncState.wrote(bytes);
 
 				// Get the first page.
-				int _result = SyncState.pageout(Page);
+				int _result = SyncState.PageOut(Page);
 				if (_result != 1)
 				{
 					// have we simply run out of data?  If so, we're done.
@@ -102,7 +102,7 @@ namespace NVorbis.jorbis.Examples
 
 				// Get the serial number and set up the rest of decode.
 				// serialno first; use it to set up a logical stream
-				StreamState.init(Page.serialno());
+				StreamState.Init(Page.serialno());
 
 				// extract the initial header from the first page and verify that the
 				// Ogg bitstream is in fact Vorbis data
@@ -121,7 +121,7 @@ namespace NVorbis.jorbis.Examples
 					Environment.Exit(1);
 				}
 
-				if (StreamState.packetout(Packet) != 1)
+				if (StreamState.PacketOut(Packet) != 1)
 				{
 					// no page? must not be vorbis
 					Console.Error.WriteLine("Error reading initial header packet.");
@@ -151,7 +151,7 @@ namespace NVorbis.jorbis.Examples
 					while (i < 2)
 					{
 
-						int result = SyncState.pageout(Page);
+						int result = SyncState.PageOut(Page);
 						if (result == 0)
 							break; // Need more data
 						// Don't complain about missing or corrupt data yet.  We'll
@@ -164,7 +164,7 @@ namespace NVorbis.jorbis.Examples
 							// at packetout
 							while (i < 2)
 							{
-								result = StreamState.packetout(Packet);
+								result = StreamState.PacketOut(Packet);
 								if (result == 0)
 									break;
 								if (result == -1)
@@ -180,8 +180,8 @@ namespace NVorbis.jorbis.Examples
 						}
 					}
 					// no harm in not checking before adding more
-					index = SyncState.buffer(4096);
-					buffer = SyncState.data;
+					index = SyncState.Buffer(4096);
+					buffer = SyncState.Data;
 					try
 					{
 						bytes = input.Read(buffer, index, 4096);
@@ -234,7 +234,7 @@ namespace NVorbis.jorbis.Examples
 					while (eos == 0)
 					{
 
-						int result = SyncState.pageout(Page);
+						int result = SyncState.PageOut(Page);
 						if (result == 0)
 							break; // need more data
 						if (result == -1)
@@ -247,7 +247,7 @@ namespace NVorbis.jorbis.Examples
 							// this point
 							while (true)
 							{
-								result = StreamState.packetout(Packet);
+								result = StreamState.PacketOut(Packet);
 
 								if (result == 0)
 									break; // need more data
@@ -320,8 +320,8 @@ namespace NVorbis.jorbis.Examples
 					}
 					if (eos == 0)
 					{
-						index = SyncState.buffer(4096);
-						buffer = SyncState.data;
+						index = SyncState.Buffer(4096);
+						buffer = SyncState.Data;
 						try
 						{
 							bytes = input.Read(buffer, index, 4096);
@@ -340,26 +340,28 @@ namespace NVorbis.jorbis.Examples
 				// clean up this logical bitstream; before exit we see if we're
 				// followed by another [chained]
 
-				StreamState.clear();
+				StreamState.Clear();
 
 				// ogg_page and ogg_packet structs always point to storage in
 				// libvorbis.  They're never freed or manipulated directly
 
 				Block.clear();
 				DspState.clear();
-				Info.clear(); // must be called last
+				Info.Clear(); // must be called last
 			}
 
 			// OK, clean up the framer
-			SyncState.clear();
+			SyncState.Clear();
 
 			var WaveStream = new WaveStream();
-			var WaveOutputStream = File.OpenWrite(Name + ".wav");
-			OutputBuffer.Position = 0;
-			WaveStream.WriteWave(WaveOutputStream, () =>
+			using (var WaveOutputStream = File.OpenWrite(Name + ".wav"))
 			{
-				OutputBuffer.CopyTo(WaveOutputStream);
-			}, NumberOfChannels: 1, SampleRate: 44100);
+				OutputBuffer.Position = 0;
+				WaveStream.WriteWave(WaveOutputStream, () =>
+				{
+					OutputBuffer.CopyTo(WaveOutputStream);
+				}, NumberOfChannels: 1, SampleRate: 44100);
+			}
 
 			Console.Error.WriteLine("Done.");
 		}

@@ -1004,7 +1004,8 @@ namespace NVorbis.jorbis
 
 			int state = 100;
 
-		loop: while (true)
+		//loop:
+		while (true)
 			{
 				switch (state)
 				{

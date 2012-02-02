@@ -5,77 +5,77 @@ using System.Text;
 
 namespace NVorbis.jogg
 {
-	// DECODING PRIMITIVES: packet streaming layer
-
-	// This has two layers to place more of the multi-serialno and paging
-	// control in the application's hands.  First, we expose a data buffer
-	// using ogg_decode_buffer().  The app either copies into the
-	// buffer, or passes it directly to read(), etc.  We then call
-	// ogg_decode_wrote() to tell how many bytes we just added.
-	//
-	// Pages are returned (pointers into the buffer in ogg_sync_state)
-	// by ogg_decode_stream().  The page is then submitted to
-	// ogg_decode_page() along with the appropriate
-	// ogg_stream_state* (ie, matching serialno).  We then get raw
-	// packets out calling ogg_stream_packet() with a
-	// ogg_stream_state.  See the 'frame-prog.txt' docs for details and
-	// example code.
-
+	/// <summary>
+	/// DECODING PRIMITIVES: packet streaming layer
+	/// 
+	/// This has two layers to place more of the multi-serialno and paging
+	/// control in the application's hands.  First, we expose a data buffer
+	/// using ogg_decode_buffer().  The app either copies into the
+	/// buffer, or passes it directly to read(), etc.  We then call
+	/// ogg_decode_wrote() to tell how many bytes we just added.
+	/// 
+	/// Pages are returned (pointers into the buffer in ogg_sync_state)
+	/// by ogg_decode_stream().  The page is then submitted to
+	/// ogg_decode_page() along with the appropriate
+	/// ogg_stream_state* (ie, matching serialno).  We then get raw
+	/// packets out calling ogg_stream_packet() with a
+	/// ogg_stream_state.  See the 'frame-prog.txt' docs for details and
+	/// example code.
+	/// </summary>
 	public class SyncState
 	{
 
-		public byte[] data;
-		int storage;
-		int fill;
-		int returned;
+		public byte[] Data;
+		int Storage;
+		int Fill;
+		int Returned;
 
-		int unsynced;
-		int headerbytes;
-		int bodybytes;
+		int Unsynced;
+		int HeaderBytes;
+		int BodyBytes;
 
-		public int clear()
+		public void Clear()
 		{
-			data = null;
-			return (0);
+			Data = null;
 		}
 
-		public int buffer(int size)
+		public int Buffer(int Size)
 		{
 			// first, clear out any space that has been previously returned
-			if (returned != 0)
+			if (Returned != 0)
 			{
-				fill -= returned;
-				if (fill > 0)
+				Fill -= Returned;
+				if (Fill > 0)
 				{
-					Array.Copy(data, returned, data, 0, fill);
+					Array.Copy(Data, Returned, Data, 0, Fill);
 				}
-				returned = 0;
+				Returned = 0;
 			}
 
-			if (size > storage - fill)
+			if (Size > Storage - Fill)
 			{
 				// We need to extend the internal buffer
-				int newsize = size + fill + 4096; // an extra page to be nice
-				if (data != null)
+				int newsize = Size + Fill + 4096; // an extra page to be nice
+				if (Data != null)
 				{
 					byte[] foo = new byte[newsize];
-					Array.Copy(data, 0, foo, 0, data.Length);
-					data = foo;
+					Array.Copy(Data, 0, foo, 0, Data.Length);
+					Data = foo;
 				}
 				else
 				{
-					data = new byte[newsize];
+					Data = new byte[newsize];
 				}
-				storage = newsize;
+				Storage = newsize;
 			}
 
-			return (fill);
+			return (Fill);
 		}
 
 		public int wrote(int bytes)
 		{
-			if (fill + bytes > storage) return (-1);
-			fill += bytes;
+			if (Fill + bytes > Storage) return (-1);
+			Fill += bytes;
 			return (0);
 		}
 
@@ -89,30 +89,30 @@ namespace NVorbis.jogg
 		private Page _pageseek = new Page();
 		private byte[] chksum = new byte[4];
 
-		public int pageseek(Page og)
+		public int PageSeek(Page og)
 		{
-			int page = returned;
+			int page = Returned;
 			int next;
-			int bytes = fill - returned;
+			int bytes = Fill - Returned;
 
-			if (headerbytes == 0)
+			if (HeaderBytes == 0)
 			{
 				int _headerbytes, i;
 				if (bytes < 27)
 					return (0); // not enough for a header
 
 				/* verify capture pattern */
-				if (data[page] != 'O' || data[page + 1] != 'g' || data[page + 2] != 'g'
-					|| data[page + 3] != 'S')
+				if (Data[page] != 'O' || Data[page + 1] != 'g' || Data[page + 2] != 'g'
+					|| Data[page + 3] != 'S')
 				{
-					headerbytes = 0;
-					bodybytes = 0;
+					HeaderBytes = 0;
+					BodyBytes = 0;
 
 					// search for possible capture
 					next = 0;
 					for (int ii = 0; ii < bytes - 1; ii++)
 					{
-						if (data[page + 1 + ii] == 'O')
+						if (Data[page + 1 + ii] == 'O')
 						{
 							next = page + 1 + ii;
 							break;
@@ -120,25 +120,25 @@ namespace NVorbis.jogg
 					}
 					//next=memchr(page+1,'O',bytes-1);
 					if (next == 0)
-						next = fill;
+						next = Fill;
 
-					returned = next;
+					Returned = next;
 					return (-(next - page));
 				}
-				_headerbytes = (data[page + 26] & 0xff) + 27;
+				_headerbytes = (Data[page + 26] & 0xff) + 27;
 				if (bytes < _headerbytes)
 					return (0); // not enough for header + seg table
 
 				// count up body length in the segment table
 
-				for (i = 0; i < (data[page + 26] & 0xff); i++)
+				for (i = 0; i < (Data[page + 26] & 0xff); i++)
 				{
-					bodybytes += (data[page + 27 + i] & 0xff);
+					BodyBytes += (Data[page + 27 + i] & 0xff);
 				}
-				headerbytes = _headerbytes;
+				HeaderBytes = _headerbytes;
 			}
 
-			if (bodybytes + headerbytes > bytes)
+			if (BodyBytes + HeaderBytes > bytes)
 				return (0);
 
 			// The whole test page is buffered.  Verify the checksum
@@ -146,39 +146,39 @@ namespace NVorbis.jogg
 			{
 				// Grab the checksum bytes, set the header field to zero
 
-				Array.Copy(data, page + 22, chksum, 0, 4);
-				data[page + 22] = 0;
-				data[page + 23] = 0;
-				data[page + 24] = 0;
-				data[page + 25] = 0;
+				Array.Copy(Data, page + 22, chksum, 0, 4);
+				Data[page + 22] = 0;
+				Data[page + 23] = 0;
+				Data[page + 24] = 0;
+				Data[page + 25] = 0;
 
 				// set up a temp page struct and recompute the checksum
 				Page log = _pageseek;
-				log.header_base = data;
+				log.header_base = Data;
 				log.header = page;
-				log.header_len = headerbytes;
+				log.header_len = HeaderBytes;
 
-				log.body_base = data;
-				log.body = page + headerbytes;
-				log.body_len = bodybytes;
+				log.body_base = Data;
+				log.body = page + HeaderBytes;
+				log.body_len = BodyBytes;
 				log.checksum();
 
 				// Compare
-				if (chksum[0] != data[page + 22] || chksum[1] != data[page + 23]
-					|| chksum[2] != data[page + 24] || chksum[3] != data[page + 25])
+				if (chksum[0] != Data[page + 22] || chksum[1] != Data[page + 23]
+					|| chksum[2] != Data[page + 24] || chksum[3] != Data[page + 25])
 				{
 					// D'oh.  Mismatch! Corrupt page (or miscapture and not a page at all)
 					// replace the computed checksum with the one actually read in
-					Array.Copy(chksum, 0, data, page + 22, 4);
+					Array.Copy(chksum, 0, Data, page + 22, 4);
 					// Bad checksum. Lose sync */
 
-					headerbytes = 0;
-					bodybytes = 0;
+					HeaderBytes = 0;
+					BodyBytes = 0;
 					// search for possible capture
 					next = 0;
 					for (int ii = 0; ii < bytes - 1; ii++)
 					{
-						if (data[page + 1 + ii] == 'O')
+						if (Data[page + 1 + ii] == 'O')
 						{
 							next = page + 1 + ii;
 							break;
@@ -186,98 +186,108 @@ namespace NVorbis.jogg
 					}
 					//next=memchr(page+1,'O',bytes-1);
 					if (next == 0)
-						next = fill;
-					returned = next;
+						next = Fill;
+					Returned = next;
 					return (-(next - page));
 				}
 			}
 
 			// yes, have a whole page all ready to go
 			{
-				page = returned;
+				page = Returned;
 
 				if (og != null)
 				{
-					og.header_base = data;
+					og.header_base = Data;
 					og.header = page;
-					og.header_len = headerbytes;
-					og.body_base = data;
-					og.body = page + headerbytes;
-					og.body_len = bodybytes;
+					og.header_len = HeaderBytes;
+					og.body_base = Data;
+					og.body = page + HeaderBytes;
+					og.body_len = BodyBytes;
 				}
 
-				unsynced = 0;
-				returned += (bytes = headerbytes + bodybytes);
-				headerbytes = 0;
-				bodybytes = 0;
+				Unsynced = 0;
+				Returned += (bytes = HeaderBytes + BodyBytes);
+				HeaderBytes = 0;
+				BodyBytes = 0;
 				return (bytes);
 			}
 		}
 
-		// sync the stream and get a page.  Keep trying until we find a page.
-		// Supress 'sync errors' after reporting the first.
-		//
-		// return values:
-		//  -1) recapture (hole in data)
-		//   0) need more data
-		//   1) page returned
-		//
-		// Returns pointers into buffered data; invalidated by next call to
-		// _stream, _clear, _init, or _buffer
-
-		public int pageout(Page og)
+		/// <summary>
+		/// sync the stream and get a page.  Keep trying until we find a page.
+		/// Supress 'sync errors' after reporting the first.
+		/// 
+		/// </summary>
+		/// <param name="og"></param>
+		/// <returns>
+		/// -1) recapture (hole in data)
+		///  0) need more data
+		///  1) page returned
+		///  
+		///  Returns pointers into buffered data; invalidated by next call to
+		///  _stream, _clear, _init, or _buffer
+		/// </returns>
+		public int PageOut(Page og)
 		{
-			// all we need to do is verify a page at the head of the stream
-			// buffer.  If it doesn't verify, we look for the next potential
-			// frame
+			// All we need to do is verify a page at the head of the
+			// stream buffer.  If it doesn't verify, we look for the
+			// next potential frame.
 
 			while (true)
 			{
-				int ret = pageseek(og);
-				if (ret > 0)
-				{
-					// have a page
-					return (1);
-				}
-				if (ret == 0)
-				{
-					// need more data
-					return (0);
-				}
+				int ret = PageSeek(og);
+	
+				// have a page
+				if (ret > 0) return 1;
+
+				// need more data
+				if (ret == 0) return 0;
 
 				// head did not start a synced page... skipped some bytes
-				if (unsynced == 0)
+				if (Unsynced == 0)
 				{
-					unsynced = 1;
-					return (-1);
+					Unsynced = 1;
+					return -1;
 				}
+
 				// loop. keep looking
 			}
 		}
 
-		// clear things to an initial state.  Good to call, eg, before seeking
-		public int reset()
+		/// <summary>
+		/// Clear things to an initial state.
+		/// Good to call, eg, before seeking.
+		/// </summary>
+		/// <returns></returns>
+		public int Reset()
 		{
-			fill = 0;
-			returned = 0;
-			unsynced = 0;
-			headerbytes = 0;
-			bodybytes = 0;
+			Fill = 0;
+			Returned = 0;
+			Unsynced = 0;
+			HeaderBytes = 0;
+			BodyBytes = 0;
 			return (0);
 		}
 
-		public void init()
+		public void Init()
 		{
 		}
 
-		public int getDataOffset()
+		public int DataOffset
 		{
-			return returned;
+			get
+			{
+				return Returned;
+			}
 		}
 
-		public int getBufferOffset()
+		public int BufferOffset
 		{
-			return fill;
+			get
+			{
+				return Fill;
+			}
 		}
 	}
 }

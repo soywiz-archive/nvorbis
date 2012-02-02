@@ -7,172 +7,217 @@ namespace NVorbis.jogg
 {
 	public class StreamState
 	{
-		byte[] body_data; /* bytes from packet bodies */
-		int body_storage; /* storage elements allocated */
-		int body_fill; /* elements stored; fill mark */
-		private int body_returned; /* elements of fill returned */
+		/// <summary>
+		/// Bytes from packet bodies
+		/// </summary>
+		byte[] BodyData;
 
-		int[] lacing_vals; /* The values that will go to the segment table */
-		long[] granule_vals; /* pcm_pos values for headers. Not compact
-   		   this way, but it is simple coupled to the
-   		   lacing fifo */
+		/// <summary>
+		/// Storage elements allocated
+		/// </summary>
+		int BodyStorage;
+		
+		/// <summary>
+		/// Elements stored; fill mark
+		/// </summary>
+		int BodyFill;
+		
+		/// <summary>
+		/// Elements of fill returned
+		/// </summary>
+		private int body_returned;
+
+		/// <summary>
+		/// The values that will go to the segment table
+		/// </summary>
+		int[] LacingVals;
+		
+		/// <summary>
+		/// pcm_pos values for headers. Not compact
+		/// this way, but it is simple coupled to the
+		/// lacing fifo
+		/// </summary>
+		long[] GranuleVals;
 		int lacing_storage;
 		int lacing_fill;
 		int lacing_packet;
 		int lacing_returned;
 
-		byte[] header = new byte[282]; /* working space for header encode */
+		/// <summary>
+		/// Working space for header encode
+		/// </summary>
+		byte[] header = new byte[282];
 		int header_fill;
 
-		public int e_o_s; /* set when we have buffered the last packet in the
-   	 logical bitstream */
-		int b_o_s; /* set after we've written the initial page
-   of a logical bitstream */
+		/// <summary>
+		/// Set when we have buffered the last packet
+		/// in the logical bitstream.
+		/// </summary>
+		public int e_o_s;
+
+		/// <summary>
+		/// Set after we've written the initial page
+		/// of a logical bitstream
+		/// </summary>
+		int b_o_s;
+
+		/// <summary>
+		/// 
+		/// </summary>
 		int serialno;
+
+		/// <summary>
+		/// 
+		/// </summary>
 		int pageno;
-		long packetno; /* sequence number for decode; the framing
-                      knows where there's a hole in the data,
-                      but we need coupling so that the codec
-                      (which is in a seperate abstraction
-                      layer) also knows about the gap */
+
+		/// <summary>
+		/// Sequence number for decode; the framing
+		/// knows where there's a hole in the data,
+		/// but we need coupling so that the codec
+		/// (which is in a seperate abstraction
+		/// layer) also knows about the gap
+		/// </summary>
+		long packetno;
+
+		/// <summary>
+		/// 
+		/// </summary>
 		long granulepos;
 
 		public StreamState()
 		{
-			init();
+			Init();
 		}
 
-		StreamState(int serialno)
+		StreamState(int SerialNumber)
 		{
 			//this();
-			init(serialno);
+			Init(SerialNumber);
 		}
 
-		void init()
+		void Init()
 		{
-			body_storage = 16 * 1024;
-			body_data = new byte[body_storage];
+			BodyStorage = 16 * 1024;
+			BodyData = new byte[BodyStorage];
 			lacing_storage = 1024;
-			lacing_vals = new int[lacing_storage];
-			granule_vals = new long[lacing_storage];
+			LacingVals = new int[lacing_storage];
+			GranuleVals = new long[lacing_storage];
 		}
 
-		public void init(int serialno)
+		public void Init(int SerialNumber)
 		{
-			if (body_data == null)
+			if (BodyData == null)
 			{
-				init();
+				Init();
 			}
 			else
 			{
-				for (int i = 0; i < body_data.Length; i++)
-					body_data[i] = 0;
-				for (int i = 0; i < lacing_vals.Length; i++)
-					lacing_vals[i] = 0;
-				for (int i = 0; i < granule_vals.Length; i++)
-					granule_vals[i] = 0;
+				for (int i = 0; i < BodyData.Length; i++) BodyData[i] = 0;
+				for (int i = 0; i < LacingVals.Length; i++) LacingVals[i] = 0;
+				for (int i = 0; i < GranuleVals.Length; i++) GranuleVals[i] = 0;
 			}
-			this.serialno = serialno;
+			this.serialno = SerialNumber;
 		}
 
-		public void clear()
+		public void Clear()
 		{
-			body_data = null;
-			lacing_vals = null;
-			granule_vals = null;
+			BodyData = null;
+			LacingVals = null;
+			GranuleVals = null;
 		}
 
-		void destroy()
+		void Destroy()
 		{
-			clear();
+			Clear();
 		}
 
-		void body_expand(int needed)
+		void BodyExpand(int Needed)
 		{
-			if (body_storage <= body_fill + needed)
+			if (BodyStorage <= BodyFill + Needed)
 			{
-				body_storage += (needed + 1024);
-				byte[] foo = new byte[body_storage];
-				Array.Copy(body_data, 0, foo, 0, body_data.Length);
-				body_data = foo;
+				BodyStorage += (Needed + 1024);
+				byte[] foo = new byte[BodyStorage];
+				Array.Copy(BodyData, 0, foo, 0, BodyData.Length);
+				BodyData = foo;
 			}
 		}
 
-		void lacing_expand(int needed)
+		void LacingExpand(int needed)
 		{
 			if (lacing_storage <= lacing_fill + needed)
 			{
 				lacing_storage += (needed + 32);
 				int[] foo = new int[lacing_storage];
-				Array.Copy(lacing_vals, 0, foo, 0, lacing_vals.Length);
-				lacing_vals = foo;
+				Array.Copy(LacingVals, 0, foo, 0, LacingVals.Length);
+				LacingVals = foo;
 
 				long[] bar = new long[lacing_storage];
-				Array.Copy(granule_vals, 0, bar, 0, granule_vals.Length);
-				granule_vals = bar;
+				Array.Copy(GranuleVals, 0, bar, 0, GranuleVals.Length);
+				GranuleVals = bar;
 			}
 		}
 
-		/* submit data to the internal buffer of the framing engine */
-		public int packetin(Packet op)
+		/// <summary>
+		/// Submit data to the internal buffer of the framing engine.
+		/// </summary>
+		/// <param name="Packet"></param>
+		/// <returns></returns>
+		public void PacketIn(Packet Packet)
 		{
-			int lacing_val = op.bytes / 255 + 1;
+			int LacingVal = Packet.bytes / 255 + 1;
 
 			if (body_returned != 0)
 			{
-				/* advance packet data according to the body_returned pointer. We
-				   had to keep it around to return a pointer into the buffer last
-				   call */
+				// Advance packet data according to the body_returned pointer.
+				// We had to keep it around to return a pointer into the buffer last call.
 
-				body_fill -= body_returned;
-				if (body_fill != 0)
+				BodyFill -= body_returned;
+				if (BodyFill != 0)
 				{
-					Array.Copy(body_data, body_returned, body_data, 0, body_fill);
+					Array.Copy(BodyData, body_returned, BodyData, 0, BodyFill);
 				}
 				body_returned = 0;
 			}
 
-			/* make sure we have the buffer storage */
-			body_expand(op.bytes);
-			lacing_expand(lacing_val);
+			// Make sure we have the buffer storage
+			BodyExpand(Packet.bytes);
+			LacingExpand(LacingVal);
 
-			/* Copy in the submitted packet.  Yes, the copy is a waste; this is
-			   the liability of overly clean abstraction for the time being.  It
-			   will actually be fairly easy to eliminate the extra copy in the
-			   future */
+			// Copy in the submitted packet.  Yes, the copy is a waste; this is
+			// the liability of overly clean abstraction for the time being.  It
+			// will actually be fairly easy to eliminate the extra copy in the
+			// future
 
-			Array.Copy(op.packet_base, op.packet, body_data, body_fill, op.bytes);
-			body_fill += op.bytes;
+			Array.Copy(Packet.packet_base, Packet.packet, BodyData, BodyFill, Packet.bytes);
+			BodyFill += Packet.bytes;
 
-			/* Store lacing vals for this packet */
+			// Store lacing vals for this packet
 			int j;
-			for (j = 0; j < lacing_val - 1; j++)
+			for (j = 0; j < LacingVal - 1; j++)
 			{
-				lacing_vals[lacing_fill + j] = 255;
-				granule_vals[lacing_fill + j] = granulepos;
+				LacingVals[lacing_fill + j] = 255;
+				GranuleVals[lacing_fill + j] = granulepos;
 			}
-			lacing_vals[lacing_fill + j] = (op.bytes) % 255;
-			granulepos = granule_vals[lacing_fill + j] = op.granulepos;
+			LacingVals[lacing_fill + j] = (Packet.bytes) % 255;
+			granulepos = GranuleVals[lacing_fill + j] = Packet.granulepos;
 
-			/* flag the first segment as the beginning of the packet */
-			lacing_vals[lacing_fill] |= 0x100;
+			// Flag the first segment as the beginning of the packet
+			LacingVals[lacing_fill] |= 0x100;
 
-			lacing_fill += lacing_val;
+			lacing_fill += LacingVal;
 
-			/* for the sake of completeness */
+			// For the sake of completeness
 			packetno++;
 
-			if (op.e_o_s != 0)
-				e_o_s = 1;
-			return (0);
+			if (Packet.e_o_s != 0) e_o_s = 1;
 		}
 
-		public int packetout(Packet op)
+		public int PacketOut(Packet Packet)
 		{
-
-			/* The last part of decode. We have the stream broken into packet
-			   segments.  Now we need to group them into packets (or return the
-			   out of sync markers) */
+			// The last part of decode. We have the stream broken into packet
+			// segments.  Now we need to group them into packets (or return the
+			// out of sync markers).
 
 			int ptr = lacing_returned;
 
@@ -181,40 +226,40 @@ namespace NVorbis.jogg
 				return (0);
 			}
 
-			if ((lacing_vals[ptr] & 0x400) != 0)
+			if ((LacingVals[ptr] & 0x400) != 0)
 			{
-				/* We lost sync here; let the app know */
+				// We lost sync here; let the app know.
 				lacing_returned++;
 
-				/* we need to tell the codec there's a gap; it might need to
-				   handle previous packet dependencies. */
+				// We need to tell the codec there's a gap; it might need to
+				// handle previous packet dependencies.
 				packetno++;
 				return (-1);
 			}
 
-			/* Gather the whole packet. We'll have no holes or a partial packet */
+			// Gather the whole packet. We'll have no holes or a partial packet
 			{
-				int size = lacing_vals[ptr] & 0xff;
+				int size = LacingVals[ptr] & 0xff;
 				int bytes = 0;
 
-				op.packet_base = body_data;
-				op.packet = body_returned;
-				op.e_o_s = lacing_vals[ptr] & 0x200; /* last packet of the stream? */
-				op.b_o_s = lacing_vals[ptr] & 0x100; /* first packet of the stream? */
+				Packet.packet_base = BodyData;
+				Packet.packet = body_returned;
+				Packet.e_o_s = LacingVals[ptr] & 0x200; // last packet of the stream?
+				Packet.b_o_s = LacingVals[ptr] & 0x100; // first packet of the stream?
 				bytes += size;
 
 				while (size == 255)
 				{
-					int val = lacing_vals[++ptr];
+					int val = LacingVals[++ptr];
 					size = val & 0xff;
 					if ((val & 0x200) != 0)
-						op.e_o_s = 0x200;
+						Packet.e_o_s = 0x200;
 					bytes += size;
 				}
 
-				op.packetno = packetno;
-				op.granulepos = granule_vals[ptr];
-				op.bytes = bytes;
+				Packet.packetno = packetno;
+				Packet.granulepos = GranuleVals[ptr];
+				Packet.bytes = bytes;
 
 				body_returned += bytes;
 
@@ -224,39 +269,42 @@ namespace NVorbis.jogg
 			return (1);
 		}
 
-		// add the incoming page to the stream state; we decompose the page
-		// into packet segments here as well.
-
-		public int pagein(Page og)
+		/// <summary>
+		/// Add the incoming page to the stream state; we decompose the page
+		/// into packet segments here as well.
+		/// </summary>
+		/// <param name="Page"></param>
+		/// <returns></returns>
+		public int pagein(Page Page)
 		{
-			byte[] header_base = og.header_base;
-			int header = og.header;
-			byte[] body_base = og.body_base;
-			int body = og.body;
-			int bodysize = og.body_len;
+			byte[] header_base = Page.header_base;
+			int header = Page.header;
+			byte[] body_base = Page.body_base;
+			int body = Page.body;
+			int bodysize = Page.body_len;
 			int segptr = 0;
 
-			int version = og.version();
-			int continued = og.continued();
-			int bos = og.bos();
-			int eos = og.eos();
-			long granulepos = og.granulepos();
-			int _serialno = og.serialno();
-			int _pageno = og.pageno();
+			int version = Page.version();
+			int continued = Page.continued();
+			int bos = Page.bos();
+			int eos = Page.eos();
+			long granulepos = Page.granulepos();
+			int _serialno = Page.serialno();
+			int _pageno = Page.pageno();
 			int segments = header_base[header + 26] & 0xff;
 
-			// clean up 'returned data'
+			// Clean up 'returned data'
 			{
 				int lr = lacing_returned;
 				int br = body_returned;
 
-				// body data
+				// Body data
 				if (br != 0)
 				{
-					body_fill -= br;
-					if (body_fill != 0)
+					BodyFill -= br;
+					if (BodyFill != 0)
 					{
-						Array.Copy(body_data, br, body_data, 0, body_fill);
+						Array.Copy(BodyData, br, BodyData, 0, BodyFill);
 					}
 					body_returned = 0;
 				}
@@ -266,8 +314,8 @@ namespace NVorbis.jogg
 					// segment table
 					if ((lacing_fill - lr) != 0)
 					{
-						Array.Copy(lacing_vals, lr, lacing_vals, 0, lacing_fill - lr);
-						Array.Copy(granule_vals, lr, granule_vals, 0, lacing_fill - lr);
+						Array.Copy(LacingVals, lr, LacingVals, 0, lacing_fill - lr);
+						Array.Copy(GranuleVals, lr, GranuleVals, 0, lacing_fill - lr);
 					}
 					lacing_fill -= lr;
 					lacing_packet -= lr;
@@ -281,7 +329,7 @@ namespace NVorbis.jogg
 			if (version > 0)
 				return (-1);
 
-			lacing_expand(segments + 1);
+			LacingExpand(segments + 1);
 
 			// are we in sequence?
 			if (_pageno != pageno)
@@ -291,7 +339,7 @@ namespace NVorbis.jogg
 				// unroll previous partial packet (if any)
 				for (i = lacing_packet; i < lacing_fill; i++)
 				{
-					body_fill -= lacing_vals[i] & 0xff;
+					BodyFill -= LacingVals[i] & 0xff;
 					//System.out.println("??");
 				}
 				lacing_fill = lacing_packet;
@@ -299,7 +347,7 @@ namespace NVorbis.jogg
 				// make a note of dropped data in segment table
 				if (pageno != -1)
 				{
-					lacing_vals[lacing_fill++] = 0x400;
+					LacingVals[lacing_fill++] = 0x400;
 					lacing_packet++;
 				}
 
@@ -324,9 +372,9 @@ namespace NVorbis.jogg
 
 			if (bodysize != 0)
 			{
-				body_expand(bodysize);
-				Array.Copy(body_base, body, body_data, body_fill, bodysize);
-				body_fill += bodysize;
+				BodyExpand(bodysize);
+				Array.Copy(body_base, body, BodyData, BodyFill, bodysize);
+				BodyFill += bodysize;
 			}
 
 			{
@@ -334,12 +382,12 @@ namespace NVorbis.jogg
 				while (segptr < segments)
 				{
 					int val = (header_base[header + 27 + segptr] & 0xff);
-					lacing_vals[lacing_fill] = val;
-					granule_vals[lacing_fill] = -1;
+					LacingVals[lacing_fill] = val;
+					GranuleVals[lacing_fill] = -1;
 
 					if (bos != 0)
 					{
-						lacing_vals[lacing_fill] |= 0x100;
+						LacingVals[lacing_fill] |= 0x100;
 						bos = 0;
 					}
 
@@ -353,10 +401,10 @@ namespace NVorbis.jogg
 						lacing_packet = lacing_fill;
 				}
 
-				/* set the granulepos on the last pcmval of the last full packet */
+				// set the granulepos on the last pcmval of the last full packet
 				if (saved != -1)
 				{
-					granule_vals[saved] = granulepos;
+					GranuleVals[saved] = granulepos;
 				}
 			}
 
@@ -364,27 +412,29 @@ namespace NVorbis.jogg
 			{
 				e_o_s = 1;
 				if (lacing_fill > 0)
-					lacing_vals[lacing_fill - 1] |= 0x200;
+					LacingVals[lacing_fill - 1] |= 0x200;
 			}
 
 			pageno = _pageno + 1;
 			return (0);
 		}
 
-		/* This will flush remaining packets into a page (returning nonzero),
-		   even if there is not enough data to trigger a flush normally
-		   (undersized page). If there are no packets or partial packets to
-		   flush, ogg_stream_flush returns 0.  Note that ogg_stream_flush will
-		   try to flush a normal sized page like ogg_stream_pageout; a call to
-		   ogg_stream_flush does not gurantee that all packets have flushed.
-		   Only a return value of 0 from ogg_stream_flush indicates all packet
-		   data is flushed into pages.
-
-		   ogg_stream_page will flush the last page in a stream even if it's
-		   undersized; you almost certainly want to use ogg_stream_pageout
-		   (and *not* ogg_stream_flush) unless you need to flush an undersized
-		   page in the middle of a stream for some reason. */
-
+		/// <summary>
+		/// This will flush remaining packets into a page (returning nonzero),
+		/// even if there is not enough data to trigger a flush normally
+		/// (undersized page). If there are no packets or partial packets to
+		/// flush, ogg_stream_flush returns 0.  Note that ogg_stream_flush will
+		/// try to flush a normal sized page like ogg_stream_pageout; a call to
+		/// ogg_stream_flush does not gurantee that all packets have flushed.
+		/// Only a return value of 0 from ogg_stream_flush indicates all packet
+		/// data is flushed into pages.
+		/// ogg_stream_page will flush the last page in a stream even if it's
+		/// undersized; you almost certainly want to use ogg_stream_pageout
+		/// (and *not* ogg_stream_flush) unless you need to flush an undersized
+		/// page in the middle of a stream for some reason.
+		/// </summary>
+		/// <param name="og"></param>
+		/// <returns></returns>
 		public int flush(Page og)
 		{
 
@@ -393,7 +443,7 @@ namespace NVorbis.jogg
 			int maxvals = (lacing_fill > 255 ? 255 : lacing_fill);
 			int bytes = 0;
 			int acc = 0;
-			ulong granule_pos = (ulong)granule_vals[0];
+			ulong granule_pos = (ulong)GranuleVals[0];
 
 			if (maxvals == 0)
 				return (0);
@@ -408,7 +458,7 @@ namespace NVorbis.jogg
 				granule_pos = 0;
 				for (vals = 0; vals < maxvals; vals++)
 				{
-					if ((lacing_vals[vals] & 0x0ff) < 255)
+					if ((LacingVals[vals] & 0x0ff) < 255)
 					{
 						vals++;
 						break;
@@ -421,37 +471,34 @@ namespace NVorbis.jogg
 				{
 					if (acc > 4096)
 						break;
-					acc += (lacing_vals[vals] & 0x0ff);
-					granule_pos = (ulong)granule_vals[vals];
+					acc += (LacingVals[vals] & 0x0ff);
+					granule_pos = (ulong)GranuleVals[vals];
 				}
 			}
 
-			/* construct the header in temp storage */
+			// construct the header in temp storage
 			Array.Copy(Encoding.ASCII.GetBytes("OggS"), 0, header, 0, 4);
 
-			/* stream structure version */
+			// stream structure version
 			header[4] = 0x00;
 
-			/* continued packet flag? */
+			// continued packet flag?
 			header[5] = 0x00;
-			if ((lacing_vals[0] & 0x100) == 0)
-				header[5] |= 0x01;
-			/* first page flag? */
-			if (b_o_s == 0)
-				header[5] |= 0x02;
-			/* last page flag? */
-			if (e_o_s != 0 && lacing_fill == vals)
-				header[5] |= 0x04;
+			if ((LacingVals[0] & 0x100) == 0) header[5] |= 0x01;
+			// first page flag?
+			if (b_o_s == 0) header[5] |= 0x02;
+			// last page flag?
+			if (e_o_s != 0 && lacing_fill == vals) header[5] |= 0x04;
 			b_o_s = 1;
 
-			/* 64 bits of PCM position */
+			// 64 bits of PCM position
 			for (i = 6; i < 14; i++)
 			{
 				header[i] = (byte)granule_pos;
 				granule_pos >>= 8;
 			}
 
-			/* 32 bits of stream serial number */
+			// 32 bits of stream serial number
 			{
 				uint _serialno = (uint)serialno;
 				for (i = 14; i < 18; i++)
@@ -461,14 +508,15 @@ namespace NVorbis.jogg
 				}
 			}
 
-			/* 32 bits of page counter (we have both counter and page header
-			   because this val can roll over) */
+			// 32 bits of page counter (we have both counter and page header
+			// because this val can roll over)
 			if (pageno == -1)
-				pageno = 0; /* because someone called
-                stream_reset; this would be a
-                strange thing to do in an
-                encode stream, but it has
-                plausible uses */
+				// because someone called
+				// stream_reset; this would be a
+				// strange thing to do in an
+				// encode stream, but it has
+				// plausible uses
+				pageno = 0;
 			{
 				uint _pageno = (uint)pageno++;
 				for (i = 18; i < 22; i++)
@@ -478,66 +526,72 @@ namespace NVorbis.jogg
 				}
 			}
 
-			/* zero for computation; filled in later */
+			// zero for computation; filled in later
 			header[22] = 0;
 			header[23] = 0;
 			header[24] = 0;
 			header[25] = 0;
 
-			/* segment table */
+			// segment table
 			header[26] = (byte)vals;
 			for (i = 0; i < vals; i++)
 			{
-				header[i + 27] = (byte)lacing_vals[i];
+				header[i + 27] = (byte)LacingVals[i];
 				bytes += (header[i + 27] & 0xff);
 			}
 
-			/* set pointers in the ogg_page struct */
+			// set pointers in the ogg_page struct
 			og.header_base = header;
 			og.header = 0;
 			og.header_len = header_fill = vals + 27;
-			og.body_base = body_data;
+			og.body_base = BodyData;
 			og.body = body_returned;
 			og.body_len = bytes;
 
-			/* advance the lacing data and set the body_returned pointer */
+			// advance the lacing data and set the body_returned pointer
 
 			lacing_fill -= vals;
-			Array.Copy(lacing_vals, vals, lacing_vals, 0, lacing_fill * 4);
-			Array.Copy(granule_vals, vals, granule_vals, 0, lacing_fill * 8);
+			Array.Copy(LacingVals, vals, LacingVals, 0, lacing_fill * 4);
+			Array.Copy(GranuleVals, vals, GranuleVals, 0, lacing_fill * 8);
 			body_returned += bytes;
 
-			/* calculate the checksum */
-
+			// calculate the checksum
 			og.checksum();
 
-			/* done */
-			return (1);
+			// done
+			return 1;
 		}
 
-		/* This constructs pages from buffered packet segments.  The pointers
-		returned are to static buffers; do not free. The returned buffers are
-		good only until the next call (using the same ogg_stream_state) */
+		/// <summary>
+		/// This constructs pages from buffered packet segments.  The pointers
+		/// returned are to static buffers; do not free. The returned buffers are
+		/// good only until the next call (using the same ogg_stream_state)
+		/// </summary>
+		/// <param name="og"></param>
+		/// <returns></returns>
 		public int pageout(Page og)
 		{
-			if ((e_o_s != 0 && lacing_fill != 0) || /* 'were done, now flush' case */
-			body_fill - body_returned > 4096 || /* 'page nominal size' case */
-			lacing_fill >= 255 || /* 'segment table full' case */
-			(lacing_fill != 0 && b_o_s == 0))
-			{ /* 'initial header page' case */
+			if (
+				(e_o_s != 0 && lacing_fill != 0) || // 'were done, now flush' case
+				BodyFill - body_returned > 4096 || // 'page nominal size' case
+				lacing_fill >= 255 || // segment table full' case
+				(lacing_fill != 0 && b_o_s == 0)
+			)
+			{
+				// 'initial header page' case
 				return flush(og);
 			}
 			return 0;
 		}
 
-		public int eof()
+		public int Eof()
 		{
 			return e_o_s;
 		}
 
-		public int reset()
+		public int Reset()
 		{
-			body_fill = 0;
+			BodyFill = 0;
 			body_returned = 0;
 
 			lacing_fill = 0;

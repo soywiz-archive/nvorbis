@@ -46,7 +46,21 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="DecodeTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NVorbis.Demo\NVorbis.Demo.csproj">
+      <Project>{9EA61DE1-FF90-44E8-AB0A-CAE04936A64B}</Project>
+      <Name>NVorbis.Demo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NVorbis\NVorbis.csproj">
+      <Project>{17F87208-BB96-4500-8E9A-FE800B67A578}</Project>
+      <Name>NVorbis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NVorvis.Extra\NVorvis.Extra.csproj">
+      <Project>{44A22CBF-64E6-4B21-B87D-264349DB9A11}</Project>
+      <Name>NVorvis.Extra</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

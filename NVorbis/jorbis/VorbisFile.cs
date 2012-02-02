@@ -33,7 +33,7 @@ namespace NVorbis.jorbis
 		internal Stream datasource;
 		internal bool _seekable = false;
 		internal long offset;
-		internal long end;
+		//internal long end;
 
 		internal SyncState oy = new SyncState();
 
@@ -114,14 +114,14 @@ namespace NVorbis.jorbis
 
 		private int get_data()
 		{
-			int index = oy.buffer(CHUNKSIZE);
-			byte[] buffer = oy.data;
+			int index = oy.Buffer(CHUNKSIZE);
+			byte[] buffer = oy.Data;
 			int bytes = 0;
 			try
 			{
 				bytes = datasource.Read(buffer, index, CHUNKSIZE);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				return OV_EREAD;
 			}
@@ -137,7 +137,7 @@ namespace NVorbis.jorbis
 		{
 			fseek(datasource, offst, SEEK_SET);
 			this.offset = offst;
-			oy.reset();
+			oy.Reset();
 		}
 
 		private int get_next_page(Page page, long boundary)
@@ -149,7 +149,7 @@ namespace NVorbis.jorbis
 				int more;
 				if (boundary > 0 && offset >= boundary)
 					return OV_FALSE;
-				more = oy.pageseek(page);
+				more = oy.PageSeek(page);
 				if (more < 0)
 				{
 					offset -= more;
@@ -292,7 +292,7 @@ namespace NVorbis.jorbis
 			if (serialno != null)
 				serialno[0] = og_ptr.serialno();
 
-			os.init(og_ptr.serialno());
+			os.Init(og_ptr.serialno());
 
 			// extract the initial header from the first page and verify that the
 			// Ogg bitstream is in fact Vorbis data
@@ -306,21 +306,21 @@ namespace NVorbis.jorbis
 				os.pagein(og_ptr);
 				while (i < 3)
 				{
-					int result = os.packetout(op);
+					int result = os.PacketOut(op);
 					if (result == 0)
 						break;
 					if (result == -1)
 					{
-						vi.clear();
-						vc.clear();
-						os.clear();
+						vi.Clear();
+						vc.Clear();
+						os.Clear();
 						return -1;
 					}
 					if (vi.synthesis_headerin(vc, op) != 0)
 					{
-						vi.clear();
-						vc.clear();
-						os.clear();
+						vi.Clear();
+						vc.Clear();
+						os.Clear();
 						return -1;
 					}
 					i++;
@@ -328,9 +328,9 @@ namespace NVorbis.jorbis
 				if (i < 3)
 					if (get_next_page(og_ptr, 1) < 0)
 					{
-						vi.clear();
-						vc.clear();
-						os.clear();
+						vi.Clear();
+						vc.Clear();
+						os.Clear();
 						return -1;
 					}
 			}
@@ -375,7 +375,7 @@ namespace NVorbis.jorbis
 					else
 					{
 						dataoffsets[i] = offset;
-						os.clear();
+						os.Clear();
 					}
 				}
 
@@ -391,8 +391,8 @@ namespace NVorbis.jorbis
 						if (ret == -1)
 						{
 							// this should not be possible
-							vi[i].clear();
-							vc[i].clear();
+							vi[i].Clear();
+							vc[i].Clear();
 							break;
 						}
 						if (og.granulepos() != -1)
@@ -432,7 +432,7 @@ namespace NVorbis.jorbis
 			ret = fetch_headers(initial_i, initial_c, foo, null);
 			serialno = foo[0];
 			dataoffset = (int)offset; //!!
-			os.clear();
+			os.Clear();
 			if (ret == -1)
 				return (-1);
 			if (ret < 0)
@@ -490,7 +490,7 @@ namespace NVorbis.jorbis
 		// clear out the current logical bitstream decoder
 		void decode_clear()
 		{
-			os.clear();
+			os.Clear();
 			vd.clear();
 			vb.clear();
 			decode_ready = false;
@@ -521,7 +521,7 @@ namespace NVorbis.jorbis
 				if (decode_ready)
 				{
 					Packet op = new Packet();
-					int result = os.packetout(op);
+					int result = os.PacketOut(op);
 					long granulepos;
 					// if(result==-1)return(-1); // hole in the data. For now, swallow
 					// and go. We'll need to add a real
@@ -625,8 +625,8 @@ namespace NVorbis.jorbis
 						// leave machine uninitialized
 						current_link = i;
 
-						os.init(current_serialno);
-						os.reset();
+						os.Init(current_serialno);
+						os.Reset();
 
 					}
 					else
@@ -653,27 +653,24 @@ namespace NVorbis.jorbis
 		{
 			vb.clear();
 			vd.clear();
-			os.clear();
+			os.Clear();
 
 			if (vi != null && links != 0)
 			{
 				for (int i = 0; i < links; i++)
 				{
-					vi[i].clear();
-					vc[i].clear();
+					vi[i].Clear();
+					vc[i].Clear();
 				}
 				vi = null;
 				vc = null;
 			}
-			if (dataoffsets != null)
-				dataoffsets = null;
-			if (pcmlengths != null)
-				pcmlengths = null;
-			if (serialnos != null)
-				serialnos = null;
-			if (offsets != null)
-				offsets = null;
-			oy.clear();
+
+			dataoffsets = null;
+			pcmlengths = null;
+			serialnos = null;
+			offsets = null;
+			oy.Clear();
 
 			return (0);
 		}
@@ -699,7 +696,7 @@ namespace NVorbis.jorbis
 					{
 					}
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 				}
 				return 0;
@@ -712,7 +709,7 @@ namespace NVorbis.jorbis
 				}
 				fis.Position += off;
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				return -1;
 			}
@@ -729,7 +726,7 @@ namespace NVorbis.jorbis
 					return (sis.Position);
 				}
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 			}
 			return 0;
@@ -753,7 +750,7 @@ namespace NVorbis.jorbis
 			int ret;
 			datasource = _is;
 
-			oy.init();
+			oy.Init();
 
 			// perhaps some data was previously read into a buffer for testing
 			// against other stream types.  Allow initialization from this
@@ -761,8 +758,8 @@ namespace NVorbis.jorbis
 			// stream)
 			if (initial != null)
 			{
-				int index = oy.buffer(ibytes);
-				Array.Copy(initial, 0, oy.data, index, ibytes);
+				int index = oy.Buffer(ibytes);
+				Array.Copy(initial, 0, oy.Data, index, ibytes);
 				oy.wrote(ibytes);
 			}
 			// can we seek? Stevens suggests the seek test was portable

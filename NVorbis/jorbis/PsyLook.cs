@@ -5,10 +5,11 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
+	/*
 	internal class PsyLook
 	{
-		internal int n;
-		internal PsyInfo vi;
+		//internal int n;
+		//internal PsyInfo vi;
 
 		internal float[][][] tonecurves;
 		internal float[][] peakatt;
@@ -21,5 +22,6 @@ namespace NVorbis.jorbis
 		{
 		}
 	}
+	*/
 
 }

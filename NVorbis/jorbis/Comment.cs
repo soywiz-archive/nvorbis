@@ -162,18 +162,18 @@ namespace NVorbis.jorbis
 
 		internal int unpack(NVorbis.jogg.Buffer opb)
 		{
-			int vendorlen = opb.read(32);
+			int vendorlen = opb.Read(32);
 			if (vendorlen < 0)
 			{
-				clear();
+				Clear();
 				return (-1);
 			}
 			vendor = new byte[vendorlen + 1];
-			opb.read(vendor, vendorlen);
-			comments = opb.read(32);
+			opb.Read(vendor, vendorlen);
+			comments = opb.Read(32);
 			if (comments < 0)
 			{
-				clear();
+				Clear();
 				return (-1);
 			}
 			user_comments = new byte[comments + 1][];
@@ -181,62 +181,62 @@ namespace NVorbis.jorbis
 
 			for (int i = 0; i < comments; i++)
 			{
-				int len = opb.read(32);
+				int len = opb.Read(32);
 				if (len < 0)
 				{
-					clear();
+					Clear();
 					return (-1);
 				}
 				comment_lengths[i] = len;
 				user_comments[i] = new byte[len + 1];
-				opb.read(user_comments[i], len);
+				opb.Read(user_comments[i], len);
 			}
-			if (opb.read(1) != 1)
+			if (opb.Read(1) != 1)
 			{
-				clear();
+				Clear();
 				return (-1);
 
 			}
 			return (0);
 		}
 
-		internal int pack(NVorbis.jogg.Buffer opb)
+		internal int Pack(NVorbis.jogg.Buffer Buffer)
 		{
 			// preamble
-			opb.write(0x03, 8);
-			opb.write(_vorbis);
+			Buffer.Write(0x03, 8);
+			Buffer.Write(_vorbis);
 
 			// vendor
-			opb.write(_vendor.Length, 32);
-			opb.write(_vendor);
+			Buffer.Write(_vendor.Length, 32);
+			Buffer.Write(_vendor);
 
 			// comments
-			opb.write(comments, 32);
+			Buffer.Write(comments, 32);
 			if (comments != 0)
 			{
 				for (int i = 0; i < comments; i++)
 				{
 					if (user_comments[i] != null)
 					{
-						opb.write(comment_lengths[i], 32);
-						opb.write(user_comments[i]);
+						Buffer.Write(comment_lengths[i], 32);
+						Buffer.Write(user_comments[i]);
 					}
 					else
 					{
-						opb.write(0, 32);
+						Buffer.Write(0, 32);
 					}
 				}
 			}
-			opb.write(1, 1);
+			Buffer.Write(1, 1);
 			return (0);
 		}
 
-		public int header_out(NVorbis.jogg.Packet op)
+		public int HeaderOut(NVorbis.jogg.Packet op)
 		{
 			NVorbis.jogg.Buffer opb = new NVorbis.jogg.Buffer();
-			opb.writeinit();
+			opb.WriteInit();
 
-			if (pack(opb) != 0)
+			if (Pack(opb) != 0)
 				return OV_EIMPL;
 
 			op.packet_base = new byte[opb.bytes()];
@@ -249,7 +249,7 @@ namespace NVorbis.jorbis
 			return 0;
 		}
 
-		internal void clear()
+		internal void Clear()
 		{
 			for (int i = 0; i < comments; i++)
 				user_comments[i] = null;
@@ -257,19 +257,22 @@ namespace NVorbis.jorbis
 			vendor = null;
 		}
 
-		public String getVendor()
+		public String Vendor
 		{
-			return Util.InternalEncoding.GetString(vendor, 0, vendor.Length - 1);
+			get
+			{
+				return Util.InternalEncoding.GetString(vendor, 0, vendor.Length - 1);
+			}
 		}
 
-		public String getComment(int i)
+		public String GetCommentAt(int i)
 		{
 			if (comments <= i)
 				return null;
 			return Util.InternalEncoding.GetString(user_comments[i], 0, user_comments[i].Length - 1);
 		}
 
-		public String toString()
+		public override string ToString()
 		{
 			String foo = "Vendor: " + Util.InternalEncoding.GetString(vendor, 0, vendor.Length - 1);
 			for (int i = 0; i < comments; i++)

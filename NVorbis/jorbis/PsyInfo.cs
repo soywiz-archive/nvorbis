@@ -6,6 +6,7 @@ using System.Text;
 namespace NVorbis.jorbis
 {
 	// psychoacoustic setup
+	/*
 	internal class PsyInfo
 	{
 		internal int athp;
@@ -53,5 +54,6 @@ namespace NVorbis.jorbis
 		{
 		}
 	}
+	*/
 
 }

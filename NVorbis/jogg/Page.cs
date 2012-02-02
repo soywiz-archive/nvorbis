@@ -66,29 +66,44 @@ namespace NVorbis.jogg
 
 		public long granulepos()
 		{
-			long foo = header_base[header + 13] & 0xff;
-			foo = (foo << 8) | (header_base[header + 12] & 0xff);
-			foo = (foo << 8) | (header_base[header + 11] & 0xff);
-			foo = (foo << 8) | (header_base[header + 10] & 0xff);
-			foo = (foo << 8) | (header_base[header + 9] & 0xff);
-			foo = (foo << 8) | (header_base[header + 8] & 0xff);
-			foo = (foo << 8) | (header_base[header + 7] & 0xff);
-			foo = (foo << 8) | (header_base[header + 6] & 0xff);
-			return (foo);
+			/*
+			ulong foo = (ulong)(header_base[header + 13] & 0xff);
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 12] & 0xff));
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 11] & 0xff));
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 10] & 0xff));
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 9] & 0xff));
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 8] & 0xff));
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 7] & 0xff));
+			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 6] & 0xff));
+			return (long)(foo);
+			*/
+			ulong foo = (ulong)(header_base[header + 13] & 0xff);
+			foo <<= 8; foo |= header_base[header + 12];
+			foo <<= 8; foo |= header_base[header + 11];
+			foo <<= 8; foo |= header_base[header + 10];
+			foo <<= 8; foo |= header_base[header + 9];
+			foo <<= 8; foo |= header_base[header + 8];
+			foo <<= 8; foo |= header_base[header + 7];
+			foo <<= 8; foo |= header_base[header + 6];
+			return (long)(foo);
 		}
 
 		public int serialno()
 		{
-			return (header_base[header + 14] & 0xff) | ((header_base[header + 15] & 0xff) << 8)
+			return (
+				(header_base[header + 14] & 0xff) | ((header_base[header + 15] & 0xff) << 8)
 				| ((header_base[header + 16] & 0xff) << 16)
-				| ((header_base[header + 17] & 0xff) << 24);
+				| ((header_base[header + 17] & 0xff) << 24)
+			);
 		}
 
 		internal int pageno()
 		{
-			return (header_base[header + 18] & 0xff) | ((header_base[header + 19] & 0xff) << 8)
+			return (
+				(header_base[header + 18] & 0xff) | ((header_base[header + 19] & 0xff) << 8)
 				| ((header_base[header + 20] & 0xff) << 16)
-				| ((header_base[header + 21] & 0xff) << 24);
+				| ((header_base[header + 21] & 0xff) << 24)
+			);
 		}
 
 		internal void checksum()
@@ -97,13 +112,11 @@ namespace NVorbis.jogg
 
 			for (int i = 0; i < header_len; i++)
 			{
-				crc_reg = (crc_reg << 8)
-					^ crc_lookup[((crc_reg >> 24) & 0xff) ^ (header_base[header + i] & 0xff)];
+				crc_reg = (crc_reg << 8) ^ crc_lookup[((crc_reg >> 24) & 0xff) ^ (header_base[header + i] & 0xff)];
 			}
 			for (int i = 0; i < body_len; i++)
 			{
-				crc_reg = (crc_reg << 8)
-					^ crc_lookup[((crc_reg >> 24) & 0xff) ^ (body_base[body + i] & 0xff)];
+				crc_reg = (crc_reg << 8) ^ crc_lookup[((crc_reg >> 24) & 0xff) ^ (body_base[body + i] & 0xff)];
 			}
 			header_base[header + 22] = (byte)(crc_reg >> 0);
 			header_base[header + 23] = (byte)(crc_reg >> 8);

@@ -41,9 +41,9 @@ namespace NVorbis.jorbis
 			int i;
 			bool ordered = false;
 
-			opb.write(0x564342, 24);
-			opb.write(dim, 16);
-			opb.write(entries, 24);
+			opb.Write(0x564342, 24);
+			opb.Write(dim, 16);
+			opb.Write(entries, 24);
 
 			// pack the codewords.  There are two packings; length ordered and
 			// length random.  Decide between the two now.
@@ -63,8 +63,8 @@ namespace NVorbis.jorbis
 				// deterministically
 
 				int count = 0;
-				opb.write(1, 1); // ordered
-				opb.write(lengthlist[0] - 1, 5); // 1 to 32
+				opb.Write(1, 1); // ordered
+				opb.Write(lengthlist[0] - 1, 5); // 1 to 32
 
 				for (i = 1; i < entries; i++)
 				{
@@ -74,18 +74,18 @@ namespace NVorbis.jorbis
 					{
 						for (int j = _last; j < _this; j++)
 						{
-							opb.write(i - count, Util.ilog(entries - count));
+							opb.Write(i - count, Util.ilog(entries - count));
 							count = i;
 						}
 					}
 				}
-				opb.write(i - count, Util.ilog(entries - count));
+				opb.Write(i - count, Util.ilog(entries - count));
 			}
 			else
 			{
 				// length random.  Again, we don't code the codeword itself, just
 				// the length.  This time, though, we have to encode each length
-				opb.write(0, 1); // unordered
+				opb.Write(0, 1); // unordered
 
 				// algortihmic mapping has use for 'unused entries', which we tag
 				// here.  The algorithmic mapping happens as usual, but the unused
@@ -98,25 +98,25 @@ namespace NVorbis.jorbis
 
 				if (i == entries)
 				{
-					opb.write(0, 1); // no unused entries
+					opb.Write(0, 1); // no unused entries
 					for (i = 0; i < entries; i++)
 					{
-						opb.write(lengthlist[i] - 1, 5);
+						opb.Write(lengthlist[i] - 1, 5);
 					}
 				}
 				else
 				{
-					opb.write(1, 1); // we have unused entries; thus we tag
+					opb.Write(1, 1); // we have unused entries; thus we tag
 					for (i = 0; i < entries; i++)
 					{
 						if (lengthlist[i] == 0)
 						{
-							opb.write(0, 1);
+							opb.Write(0, 1);
 						}
 						else
 						{
-							opb.write(1, 1);
-							opb.write(lengthlist[i] - 1, 5);
+							opb.Write(1, 1);
+							opb.Write(lengthlist[i] - 1, 5);
 						}
 					}
 				}
@@ -124,7 +124,7 @@ namespace NVorbis.jorbis
 
 			// is the entry number the desired return value, or do we have a
 			// mapping? If we have a mapping, what type?
-			opb.write(maptype, 4);
+			opb.Write(maptype, 4);
 			switch (maptype)
 			{
 				case 0:
@@ -141,10 +141,10 @@ namespace NVorbis.jorbis
 					}
 
 					// values that define the dequantization
-					opb.write(q_min, 32);
-					opb.write(q_delta, 32);
-					opb.write(q_quant - 1, 4);
-					opb.write(q_sequencep, 1);
+					opb.Write(q_min, 32);
+					opb.Write(q_delta, 32);
+					opb.Write(q_quant - 1, 4);
+					opb.Write(q_sequencep, 1);
 					{
 						int quantvals = 0;
 						switch (maptype)
@@ -163,7 +163,7 @@ namespace NVorbis.jorbis
 						// quantized values
 						for (i = 0; i < quantvals; i++)
 						{
-							opb.write(Math.Abs(quantlist[i]), q_quant);
+							opb.Write(Math.Abs(quantlist[i]), q_quant);
 						}
 					}
 					break;
@@ -182,7 +182,7 @@ namespace NVorbis.jorbis
 			//memset(s,0,sizeof(static_codebook));
 
 			// make sure alignment is correct
-			if (opb.read(24) != 0x564342)
+			if (opb.Read(24) != 0x564342)
 			{
 				//    goto _eofout;
 				clear();
@@ -190,8 +190,8 @@ namespace NVorbis.jorbis
 			}
 
 			// first the basic parameters
-			dim = opb.read(16);
-			entries = opb.read(24);
+			dim = opb.Read(16);
+			entries = opb.Read(24);
 			if (entries == -1)
 			{
 				//    goto _eofout;
@@ -200,22 +200,22 @@ namespace NVorbis.jorbis
 			}
 
 			// codeword ordering.... length ordered or unordered?
-			switch (opb.read(1))
+			switch (opb.Read(1))
 			{
 				case 0:
 					// unordered
 					lengthlist = new int[entries];
 
 					// allocated but unused entries?
-					if (opb.read(1) != 0)
+					if (opb.Read(1) != 0)
 					{
 						// yes, unused entries
 
 						for (i = 0; i < entries; i++)
 						{
-							if (opb.read(1) != 0)
+							if (opb.Read(1) != 0)
 							{
-								int num = opb.read(5);
+								int num = opb.Read(5);
 								if (num == -1)
 								{
 									//            goto _eofout;
@@ -235,7 +235,7 @@ namespace NVorbis.jorbis
 						// all entries used; no tagging
 						for (i = 0; i < entries; i++)
 						{
-							int num = opb.read(5);
+							int num = opb.Read(5);
 							if (num == -1)
 							{
 								//          goto _eofout;
@@ -249,12 +249,12 @@ namespace NVorbis.jorbis
 				case 1:
 					// ordered
 					{
-						int length = opb.read(5) + 1;
+						int length = opb.Read(5) + 1;
 						lengthlist = new int[entries];
 
 						for (i = 0; i < entries; )
 						{
-							int num = opb.read(Util.ilog(entries - i));
+							int num = opb.Read(Util.ilog(entries - i));
 							if (num == -1)
 							{
 								//          goto _eofout;
@@ -275,7 +275,7 @@ namespace NVorbis.jorbis
 			}
 
 			// Do we have a mapping to unpack?
-			switch ((maptype = opb.read(4)))
+			switch ((maptype = opb.Read(4)))
 			{
 				case 0:
 					// no mapping
@@ -284,10 +284,10 @@ namespace NVorbis.jorbis
 				case 2:
 					// implicitly populated value mapping
 					// explicitly populated value mapping
-					q_min = opb.read(32);
-					q_delta = opb.read(32);
-					q_quant = opb.read(4) + 1;
-					q_sequencep = opb.read(1);
+					q_min = opb.Read(32);
+					q_delta = opb.Read(32);
+					q_quant = opb.Read(4) + 1;
+					q_sequencep = opb.Read(1);
 					{
 						int quantvals = 0;
 						switch (maptype)
@@ -304,7 +304,7 @@ namespace NVorbis.jorbis
 						quantlist = new int[quantvals];
 						for (i = 0; i < quantvals; i++)
 						{
-							quantlist[i] = opb.read(q_quant);
+							quantlist[i] = opb.Read(q_quant);
 						}
 						if (quantlist[quantvals - 1] == -1)
 						{

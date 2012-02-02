@@ -11,25 +11,25 @@ namespace NVorbis.jorbis
 		override internal void pack(Object i, NVorbis.jogg.Buffer opb)
 		{
 			InfoFloor0 info = (InfoFloor0)i;
-			opb.write(info.order, 8);
-			opb.write(info.rate, 16);
-			opb.write(info.barkmap, 16);
-			opb.write(info.ampbits, 6);
-			opb.write(info.ampdB, 8);
-			opb.write(info.numbooks - 1, 4);
+			opb.Write(info.order, 8);
+			opb.Write(info.rate, 16);
+			opb.Write(info.barkmap, 16);
+			opb.Write(info.ampbits, 6);
+			opb.Write(info.ampdB, 8);
+			opb.Write(info.numbooks - 1, 4);
 			for (int j = 0; j < info.numbooks; j++)
-				opb.write(info.books[j], 8);
+				opb.Write(info.books[j], 8);
 		}
 
 		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
 		{
 			InfoFloor0 info = new InfoFloor0();
-			info.order = opb.read(8);
-			info.rate = opb.read(16);
-			info.barkmap = opb.read(16);
-			info.ampbits = opb.read(6);
-			info.ampdB = opb.read(8);
-			info.numbooks = opb.read(4) + 1;
+			info.order = opb.Read(8);
+			info.rate = opb.Read(16);
+			info.barkmap = opb.Read(16);
+			info.ampbits = opb.Read(6);
+			info.ampdB = opb.Read(8);
+			info.numbooks = opb.Read(4) + 1;
 
 			if ((info.order < 1) || (info.rate < 1) || (info.barkmap < 1) || (info.numbooks < 1))
 			{
@@ -38,7 +38,7 @@ namespace NVorbis.jorbis
 
 			for (int j = 0; j < info.numbooks; j++)
 			{
-				info.books[j] = opb.read(8);
+				info.books[j] = opb.Read(8);
 				if (info.books[j] < 0 || info.books[j] >= vi.books)
 				{
 					return (null);
@@ -120,12 +120,12 @@ namespace NVorbis.jorbis
 			//System.err.println("Floor0.inverse "+i.getClass()+"]");
 			LookFloor0 look = (LookFloor0)i;
 			InfoFloor0 info = look.vi;
-			int ampraw = vb.opb.read(info.ampbits);
+			int ampraw = vb.opb.Read(info.ampbits);
 			if (ampraw > 0)
 			{ // also handles the -1 out of data case
 				int maxval = (1 << info.ampbits) - 1;
 				float amp = (float)ampraw / maxval * info.ampdB;
-				int booknum = vb.opb.read(Util.ilog(info.numbooks));
+				int booknum = vb.opb.Read(Util.ilog(info.numbooks));
 
 				if (booknum != -1 && booknum < info.numbooks)
 				{
@@ -184,12 +184,12 @@ namespace NVorbis.jorbis
 				lsp = (float[])memo;
 			}
 
-			int ampraw = vb.opb.read(info.ampbits);
+			int ampraw = vb.opb.Read(info.ampbits);
 			if (ampraw > 0)
 			{ // also handles the -1 out of data case
 				int maxval = (1 << info.ampbits) - 1;
 				float amp = (float)ampraw / maxval * info.ampdB;
-				int booknum = vb.opb.read(Util.ilog(info.numbooks));
+				int booknum = vb.opb.Read(Util.ilog(info.numbooks));
 
 				if (booknum != -1 && booknum < info.numbooks)
 				{
@@ -352,7 +352,7 @@ namespace NVorbis.jorbis
 			internal int[] codewords;
 			internal float[] curve;
 			internal long frameno;
-			internal long codes;
+			//internal long codes;
 		}
 	}
 
