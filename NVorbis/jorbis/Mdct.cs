@@ -5,6 +5,10 @@ using System.Text;
 
 namespace NVorbis.jorbis
 {
+	/// <summary>
+	/// Modified discrete cosine transform
+	/// </summary>
+	/// <see cref="http://en.wikipedia.org/wiki/Modified_discrete_cosine_transform"/>
 	class Mdct
 	{
 
@@ -16,7 +20,7 @@ namespace NVorbis.jorbis
 
 		internal float scale;
 
-		internal void init(int n)
+		internal void Init(int n)
 		{
 			bitrev = new int[n / 4];
 			trig = new float[n + n / 4];
@@ -61,18 +65,18 @@ namespace NVorbis.jorbis
 			scale = 4.0f / n;
 		}
 
-		internal void clear()
+		internal void Clear()
 		{
 		}
 
-		internal void forward(float[] In, float[] Out)
+		internal void Forward(float[] In, float[] Out)
 		{
 		}
 
 		internal float[] _x = new float[1024];
 		internal float[] _w = new float[1024];
 
-		internal void backward(float[] In, float[] Out)
+		internal void Backward(float[] In, float[] Out)
 		{
 			lock (this)
 			{
@@ -147,8 +151,7 @@ namespace NVorbis.jorbis
 			}
 		}
 
-		private float[] mdct_kernel(float[] x, float[] w, int n, int n2, int n4,
-			int n8)
+		private float[] mdct_kernel(float[] x, float[] w, int n, int n2, int n4, int n8)
 		{
 			// step 2
 

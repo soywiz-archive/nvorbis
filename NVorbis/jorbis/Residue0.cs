@@ -8,7 +8,7 @@ namespace NVorbis.jorbis
 	class Residue0 : FuncResidue
 	{
 		static Object StatickLock = new Object();
-		override internal void pack(Object vr, NVorbis.jogg.Buffer opb)
+		override internal void pack(Object vr, NVorbis.jogg.BBuffer opb)
 		{
 			InfoResidue0 info = (InfoResidue0)vr;
 			int acc = 0;
@@ -45,7 +45,7 @@ namespace NVorbis.jorbis
 			}
 		}
 
-		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
+		override internal Object unpack(Info vi, NVorbis.jogg.BBuffer opb)
 		{
 			int acc = 0;
 			InfoResidue0 info = new InfoResidue0();

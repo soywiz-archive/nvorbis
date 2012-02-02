@@ -8,8 +8,8 @@ namespace NVorbis.jorbis
 	abstract class FuncTime
 	{
 		public static FuncTime[] time_P = { new Time0() };
-		abstract internal void pack(Object i, NVorbis.jogg.Buffer opb);
-		abstract internal Object unpack(Info vi, NVorbis.jogg.Buffer opb);
+		abstract internal void pack(Object i, NVorbis.jogg.BBuffer opb);
+		abstract internal Object unpack(Info vi, NVorbis.jogg.BBuffer opb);
 		abstract internal Object look(DspState vd, InfoMode vm, Object i);
 		abstract internal void free_info(Object i);
 		abstract internal void free_look(Object i);

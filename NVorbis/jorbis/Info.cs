@@ -175,7 +175,7 @@ namespace NVorbis.jorbis
 		}
 
 		// Header packing/unpacking
-		int unpack_info(NVorbis.jogg.Buffer opb)
+		int unpack_info(NVorbis.jogg.BBuffer opb)
 		{
 			version = opb.Read(32);
 			if (version != 0)
@@ -202,7 +202,7 @@ namespace NVorbis.jorbis
 
 		// all of the real encoding details are here.  The modes, books,
 		// everything
-		int unpack_books(NVorbis.jogg.Buffer opb)
+		int unpack_books(NVorbis.jogg.BBuffer opb)
 		{
 
 			books = opb.Read(8) + 1;
@@ -349,7 +349,7 @@ namespace NVorbis.jorbis
 
 		public int synthesis_headerin(Comment vc, Packet op)
 		{
-			NVorbis.jogg.Buffer opb = new NVorbis.jogg.Buffer();
+			NVorbis.jogg.BBuffer opb = new NVorbis.jogg.BBuffer();
 
 			if (op != null)
 			{
@@ -406,7 +406,7 @@ namespace NVorbis.jorbis
 		}
 
 		// pack side
-		int pack_info(NVorbis.jogg.Buffer opb)
+		int pack_info(NVorbis.jogg.BBuffer opb)
 		{
 			// preamble
 			opb.Write(0x01, 8);
@@ -427,7 +427,7 @@ namespace NVorbis.jorbis
 			return (0);
 		}
 
-		int pack_books(NVorbis.jogg.Buffer opb)
+		int pack_books(NVorbis.jogg.BBuffer opb)
 		{
 			opb.Write(0x05, 8);
 			opb.Write(_vorbis);
@@ -491,7 +491,7 @@ namespace NVorbis.jorbis
 		public int blocksize(Packet op)
 		{
 			//codec_setup_info
-			NVorbis.jogg.Buffer opb = new NVorbis.jogg.Buffer();
+			NVorbis.jogg.BBuffer opb = new NVorbis.jogg.BBuffer();
 
 			int mode;
 

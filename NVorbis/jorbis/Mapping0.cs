@@ -42,11 +42,9 @@ namespace NVorbis.jorbis
 				look.time_func[i] = FuncTime.time_P[vi.time_type[timenum]];
 				look.time_look[i] = look.time_func[i].look(vd, vm, vi.time_param[timenum]);
 				look.floor_func[i] = FuncFloor.floor_P[vi.floor_type[floornum]];
-				look.floor_look[i] = look.floor_func[i].look(vd, vm,
-					vi.floor_param[floornum]);
+				look.floor_look[i] = look.floor_func[i].look(vd, vm, vi.floor_param[floornum]);
 				look.residue_func[i] = FuncResidue.residue_P[vi.residue_type[resnum]];
-				look.residue_look[i] = look.residue_func[i].look(vd, vm,
-					vi.residue_param[resnum]);
+				look.residue_look[i] = look.residue_func[i].look(vd, vm, vi.residue_param[resnum]);
 
 			}
 
@@ -62,7 +60,7 @@ namespace NVorbis.jorbis
 			return (look);
 		}
 
-		override internal void pack(Info vi, Object imap, NVorbis.jogg.Buffer opb)
+		override internal void pack(Info vi, Object imap, NVorbis.jogg.BBuffer opb)
 		{
 			InfoMapping0 info = (InfoMapping0)imap;
 
@@ -115,7 +113,7 @@ namespace NVorbis.jorbis
 		}
 
 		// also responsible for range checking
-		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
+		override internal Object unpack(Info vi, NVorbis.jogg.BBuffer opb)
 		{
 			InfoMapping0 info = new InfoMapping0();
 
@@ -333,7 +331,7 @@ namespace NVorbis.jorbis
 				{
 					float[] pcm = vb.pcm[i];
 					//_analysis_output("out",seq+i,pcm,n/2,0,0);
-					((Mdct)vd.transform[vb.W][0]).backward(pcm, pcm);
+					((Mdct)vd.transform[vb.W][0]).Backward(pcm, pcm);
 				}
 
 				// now apply the decoded pre-window time information

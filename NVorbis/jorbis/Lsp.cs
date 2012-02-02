@@ -52,7 +52,7 @@ namespace NVorbis.jorbis
 			int i;
 			float wdel = M_PI / ln;
 			for (i = 0; i < m; i++)
-				lsp[i] = Lookup.coslook(lsp[i]);
+				lsp[i] = Lookup.CosLook(lsp[i]);
 			int m2 = (m / 2) * 2;
 
 			i = 0;
@@ -61,7 +61,7 @@ namespace NVorbis.jorbis
 				int k = map[i];
 				float p = .7071067812f;
 				float q = .7071067812f;
-				float w = Lookup.coslook(wdel * k);
+				float w = Lookup.CosLook(wdel * k);
 
 				for (int j = 0; j < m2; j += 2)
 				{

@@ -160,7 +160,7 @@ namespace NVorbis.jorbis
 			return -1;
 		}
 
-		internal int unpack(NVorbis.jogg.Buffer opb)
+		internal int unpack(NVorbis.jogg.BBuffer opb)
 		{
 			int vendorlen = opb.Read(32);
 			if (vendorlen < 0)
@@ -200,7 +200,7 @@ namespace NVorbis.jorbis
 			return (0);
 		}
 
-		internal int Pack(NVorbis.jogg.Buffer Buffer)
+		internal int Pack(NVorbis.jogg.BBuffer Buffer)
 		{
 			// preamble
 			Buffer.Write(0x03, 8);
@@ -233,7 +233,7 @@ namespace NVorbis.jorbis
 
 		public int HeaderOut(NVorbis.jogg.Packet op)
 		{
-			NVorbis.jogg.Buffer opb = new NVorbis.jogg.Buffer();
+			NVorbis.jogg.BBuffer opb = new NVorbis.jogg.BBuffer();
 			opb.WriteInit();
 
 			if (Pack(opb) != 0)

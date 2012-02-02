@@ -163,8 +163,8 @@ namespace NVorbis.jorbis
 
 			transform[0][0] = new Mdct();
 			transform[1][0] = new Mdct();
-			((Mdct)transform[0][0]).init(vi.blocksizes[0]);
-			((Mdct)transform[1][0]).init(vi.blocksizes[1]);
+			((Mdct)transform[0][0]).Init(vi.blocksizes[0]);
+			((Mdct)transform[1][0]).Init(vi.blocksizes[1]);
 
 			_window[0][0][0] = new float[VI_WINDOWB][];
 			_window[0][0][1] = _window[0][0][0];

@@ -7,8 +7,7 @@ namespace NVorbis.jorbis
 {
 	class Floor0 : FuncFloor
 	{
-
-		override internal void pack(Object i, NVorbis.jogg.Buffer opb)
+		override internal void pack(Object i, NVorbis.jogg.BBuffer opb)
 		{
 			InfoFloor0 info = (InfoFloor0)i;
 			opb.Write(info.order, 8);
@@ -21,7 +20,7 @@ namespace NVorbis.jorbis
 				opb.Write(info.books[j], 8);
 		}
 
-		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
+		override internal Object unpack(Info vi, NVorbis.jogg.BBuffer opb)
 		{
 			InfoFloor0 info = new InfoFloor0();
 			info.order = opb.Read(8);

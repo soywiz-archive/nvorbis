@@ -10,7 +10,7 @@ namespace NVorbis.jorbis
 		internal const int floor1_rangedb = 140;
 		internal const int VIF_POSIT = 63;
 
-		override internal void pack(Object i, NVorbis.jogg.Buffer opb)
+		override internal void pack(Object i, NVorbis.jogg.BBuffer opb)
 		{
 			InfoFloor1 info = (InfoFloor1)i;
 
@@ -58,7 +58,7 @@ namespace NVorbis.jorbis
 			}
 		}
 
-		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
+		override internal Object unpack(Info vi, NVorbis.jogg.BBuffer opb)
 		{
 			int count = 0, maxclass = -1, rangebits;
 			InfoFloor1 info = new InfoFloor1();

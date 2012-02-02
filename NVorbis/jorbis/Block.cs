@@ -36,7 +36,7 @@ namespace NVorbis.jorbis
 	{
 		///necessary stream state for linking to the framing abstraction
 		internal float[][] pcm = new float[0][]; // this is a pointer into local storage
-		internal NVorbis.jogg.Buffer opb = new NVorbis.jogg.Buffer();
+		internal NVorbis.jogg.BBuffer opb = new NVorbis.jogg.BBuffer();
 
 		internal int lW;
 		internal int W;

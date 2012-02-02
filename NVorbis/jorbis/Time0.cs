@@ -7,11 +7,11 @@ namespace NVorbis.jorbis
 {
 	class Time0 : FuncTime
 	{
-		override internal void pack(Object i, NVorbis.jogg.Buffer opb)
+		override internal void pack(Object i, NVorbis.jogg.BBuffer opb)
 		{
 		}
 
-		override internal Object unpack(Info vi, NVorbis.jogg.Buffer opb)
+		override internal Object unpack(Info vi, NVorbis.jogg.BBuffer opb)
 		{
 			return "";
 		}

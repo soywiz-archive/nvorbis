@@ -7,22 +7,22 @@ namespace NVorbis.jorbis
 {
 	class CodeBook
 	{
-		internal int dim; // codebook dimensions (elements per vector)
-		internal int entries; // codebook entries
+		/// <summary>
+		/// Codebook dimensions (elements per vector).
+		/// </summary>
+		internal int dim;
+		
+		/// <summary>
+		/// Codebook entries.
+		/// </summary>
+		internal int entries;
 		internal StaticCodeBook c = new StaticCodeBook();
 
-		internal float[] valuelist; // list of dim*entries actual entry values
-		//internal int[] codelist; // list of bitstream codewords for each entry
+		/// <summary>
+		/// List of dim*entries actual entry values.
+		/// </summary>
+		internal float[] valuelist;
 		internal DecodeAux decode_tree;
-
-		// returns the number of bits
-		/*
-		internal int encode(int a, NVorbis.jogg.Buffer b)
-		{
-			b.Write(codelist[a], c.lengthlist[a]);
-			return (c.lengthlist[a]);
-		}
-		*/
 
 		// One the encode side, our vector writers are each designed for a
 		// specific purpose, and the encoder is not flexible without modification:
@@ -49,29 +49,12 @@ namespace NVorbis.jorbis
 			return (best);
 		}
 
-		// returns the number of bits and *modifies a* to the quantization value
-		/*
-		internal int encodev(int best, float[] a, NVorbis.jogg.Buffer b)
-		{
-			for (int k = 0; k < dim; k++)
-			{
-				a[k] = valuelist[best * dim + k];
-			}
-			return (this.encode(best, b));
-		}
+		/// <summary>
+		/// decodevs_add is synchronized for re-using t.
+		/// </summary>
+		private int[] t = new int[15]; 
 
-		// res0 (multistage, interleave, lattice)
-		// returns the number of bits and *modifies a* to the remainder value
-		internal int encodevs(float[] a, NVorbis.jogg.Buffer b, int step, int addmul)
-		{
-			int best = besterror(a, step, addmul);
-			return (this.encode(best, b));
-		}
-		*/
-
-		private int[] t = new int[15]; // decodevs_add is synchronized for re-using t.
-
-		internal int decodevs_add(float[] a, int offset, NVorbis.jogg.Buffer b, int n)
+		internal int decodevs_add(float[] a, int offset, NVorbis.jogg.BBuffer b, int n)
 		{
 			lock (this)
 			{
@@ -103,7 +86,7 @@ namespace NVorbis.jorbis
 			}
 		}
 
-		internal int decodev_add(float[] a, int offset, NVorbis.jogg.Buffer b, int n)
+		internal int decodev_add(float[] a, int offset, NVorbis.jogg.BBuffer b, int n)
 		{
 			int i, j, entry;
 			int t;
@@ -165,7 +148,7 @@ namespace NVorbis.jorbis
 			return (0);
 		}
 
-		internal int decodev_set(float[] a, int offset, NVorbis.jogg.Buffer b, int n)
+		internal int decodev_set(float[] a, int offset, NVorbis.jogg.BBuffer b, int n)
 		{
 			int i, j, entry;
 			int t;
@@ -173,8 +156,7 @@ namespace NVorbis.jorbis
 			for (i = 0; i < n; )
 			{
 				entry = decode(b);
-				if (entry == -1)
-					return (-1);
+				if (entry == -1) return (-1);
 				t = entry * dim;
 				for (j = 0; j < dim; )
 				{
@@ -184,7 +166,7 @@ namespace NVorbis.jorbis
 			return (0);
 		}
 
-		internal int decodevv_add(float[][] a, int offset, int ch, NVorbis.jogg.Buffer b, int n)
+		internal int decodevv_add(float[][] a, int offset, int ch, NVorbis.jogg.BBuffer b, int n)
 		{
 			int i, j, entry;
 			int chptr = 0;
@@ -224,7 +206,7 @@ namespace NVorbis.jorbis
 		// stage==2 -> multiplicitive
 
 		// returns the entry number or -1 on eof
-		internal int decode(NVorbis.jogg.Buffer b)
+		internal int decode(NVorbis.jogg.BBuffer b)
 		{
 			int ptr = 0;
 			DecodeAux t = decode_tree;
@@ -259,7 +241,7 @@ namespace NVorbis.jorbis
 		}
 
 		// returns the entry number or -1 on eof
-		internal int decodevs(float[] a, int index, NVorbis.jogg.Buffer b, int step, int addmul)
+		internal int decodevs(float[] a, int index, NVorbis.jogg.BBuffer b, int step, int addmul)
 		{
 			int entry = decode(b);
 			if (entry == -1)

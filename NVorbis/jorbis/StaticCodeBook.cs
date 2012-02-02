@@ -36,7 +36,7 @@ namespace NVorbis.jorbis
 		{
 		}
 
-		internal int pack(NVorbis.jogg.Buffer opb)
+		internal int pack(NVorbis.jogg.BBuffer opb)
 		{
 			int i;
 			bool ordered = false;
@@ -176,7 +176,7 @@ namespace NVorbis.jorbis
 
 		// unpacks a codebook from the packet buffer into the codebook struct,
 		// readies the codebook auxiliary structures for decode
-		internal int unpack(NVorbis.jogg.Buffer opb)
+		internal int unpack(NVorbis.jogg.BBuffer opb)
 		{
 			int i;
 			//memset(s,0,sizeof(static_codebook));
