@@ -40,7 +40,7 @@
     <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OggStream.cs" />
+    <Compile Include="OggToWavStream.cs" />
     <Compile Include="Ogg\BBuffer.cs" />
     <Compile Include="Ogg\Packet.cs" />
     <Compile Include="Ogg\Page.cs" />

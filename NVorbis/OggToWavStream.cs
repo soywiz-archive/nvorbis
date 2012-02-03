@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define CAN_SEEK
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,17 +12,18 @@ using System.Diagnostics;
 
 namespace NVorbis
 {
-    public class OggStream : Stream
+    public class OggToWavStream : Stream
     {
-        Stream WaveOutputStream;
-        Stream BufferStream;
-        Stream OggBaseStream;
+		Stream WaveOutputStream;
+		Stream BufferStream;
+		Stream OggBaseStream;
 
-        public OggStream(Stream OggBaseStream)
+        public OggToWavStream(Stream OggBaseStream)
         {
             this.OggBaseStream = OggBaseStream;
             this.BufferStream = new MemoryStream();
-            DecodeFromTo(this.OggBaseStream, this.BufferStream);
+			DecodeInit();
+            DecodeTo(this.BufferStream);
             BufferStream.Position = 0;
 
             var WaveStream = new WaveStream();
@@ -41,27 +44,42 @@ namespace NVorbis
                 BufferStream.CopyTo(WaveOutputStream);
 #endif
             }, NumberOfChannels: 1, SampleRate: 44100);
-
+			WaveOutputStream.Position = 0;
         }
 
-        private void DecodeFromTo(Stream InputStream, Stream OutputBuffer)
+		int convsize = 4096 * 2;
+		byte[] convbuffer;
+
+		SyncState SyncState;
+		StreamState StreamState;
+		Page Page;
+		Packet Packet;
+
+		Info Info;
+		Comment Comment;
+		DspState DspState;
+		Block Block;
+
+		byte[] buffer;
+		int bytes = 0;
+
+		private void DecodeInit()
+		{
+			convbuffer = new byte[convsize]; // take 8k out of the data segment, not the stack
+			SyncState = new SyncState(); // sync and verify incoming physical bitstream
+			StreamState = new StreamState(); // take physical pages, weld into a logical stream of packets
+			Page = new Page(); // one Ogg bitstream page.  Vorbis packets are inside
+			Packet = new Packet(); // one raw packet of data for decode
+
+			Info = new Info(); // struct that stores all the static vorbis bitstream settings
+			Comment = new Comment(); // struct that stores all the bitstream user comments
+			DspState = new DspState(); // central working state for the packet->PCM decoder
+			Block = new Block(DspState); // local working space for packet->PCM decode
+			bytes = 0;
+		}
+
+		private void DecodeTo(Stream OutputBuffer)
         {
-		    int convsize = 4096 * 2;
-		    byte[] convbuffer = new byte[convsize]; // take 8k out of the data segment, not the stack
-
-            var SyncState = new SyncState(); // sync and verify incoming physical bitstream
-            var StreamState = new StreamState(); // take physical pages, weld into a logical stream of packets
-            var Page = new Page(); // one Ogg bitstream page.  Vorbis packets are inside
-            var Packet = new Packet(); // one raw packet of data for decode
-
-            var Info = new Info(); // struct that stores all the static vorbis bitstream settings
-            var Comment = new Comment(); // struct that stores all the bitstream user comments
-            var DspState = new DspState(); // central working state for the packet->PCM decoder
-            var Block = new Block(DspState); // local working space for packet->PCM decode
-
-            byte[] buffer;
-            int bytes = 0;
-
             // Decode setup
 
             SyncState.Init(); // Now we can read pages
@@ -69,7 +87,7 @@ namespace NVorbis
             // we repeat if the bitstream is chained
             while (true)
             {
-                int eos = 0;
+                bool eos = false;
 
                 // grab some data at the head of the stream.  We want the first page
                 // (which is guaranteed to be small and only contain the Vorbis
@@ -81,7 +99,7 @@ namespace NVorbis
                 buffer = SyncState.Data;
                 try
                 {
-                    bytes = InputStream.Read(buffer, index, 4096);
+                    bytes = OggBaseStream.Read(buffer, index, 4096);
                 }
                 catch (Exception e)
                 {
@@ -118,23 +136,12 @@ namespace NVorbis
 
                 Info.init();
                 Comment.init();
-                if (StreamState.pagein(Page) < 0)
-                {
-                    // error; stream version mismatch perhaps
-                    throw (new Exception("Error reading first page of Ogg bitstream data."));
-                }
-
-                if (StreamState.PacketOut(Packet) != 1)
-                {
-                    // no page? must not be vorbis
-                    throw (new Exception("Error reading initial header packet."));
-                }
-
-                if (Info.synthesis_headerin(Comment, Packet) < 0)
-                {
-                    // error case; not a vorbis header
-                    throw (new Exception("This Ogg bitstream does not contain Vorbis audio data."));
-                }
+				// error; stream version mismatch perhaps
+				if (StreamState.pagein(Page) < 0) throw (new Exception("Error reading first page of Ogg bitstream data."));
+				// no page? must not be vorbis
+				if (StreamState.PacketOut(Packet) != 1) throw (new Exception("Error reading initial header packet."));
+				// error case; not a vorbis header
+				if (Info.synthesis_headerin(Comment, Packet) < 0) throw (new Exception("This Ogg bitstream does not contain Vorbis audio data."));
 
                 // At this point, we're sure we're Vorbis.  We've set up the logical
                 // (Ogg) bitstream decoder.  Get the comment and codebook headers and
@@ -153,8 +160,7 @@ namespace NVorbis
                     {
 
                         int result = SyncState.PageOut(Page);
-                        if (result == 0)
-                            break; // Need more data
+                        if (result == 0) break; // Need more data
                         // Don't complain about missing or corrupt data yet.  We'll
                         // catch it at the packet output phase
 
@@ -166,14 +172,11 @@ namespace NVorbis
                             while (i < 2)
                             {
                                 result = StreamState.PacketOut(Packet);
-                                if (result == 0)
-                                    break;
-                                if (result == -1)
-                                {
-                                    // Uh oh; data at some point was corrupted or missing!
-                                    // We can't tolerate that in a header.  Die.
-                                    throw (new Exception("Corrupt secondary header.  Exiting."));
-                                }
+                                if (result == 0) break;
+
+								// Uh oh; data at some point was corrupted or missing!
+								// We can't tolerate that in a header.  Die.
+								if (result == -1) throw (new Exception("Corrupt secondary header.  Exiting."));
                                 Info.synthesis_headerin(Comment, Packet);
                                 i++;
                             }
@@ -182,14 +185,7 @@ namespace NVorbis
                     // no harm in not checking before adding more
                     index = SyncState.Buffer(4096);
                     buffer = SyncState.Data;
-                    try
-                    {
-                        bytes = InputStream.Read(buffer, index, 4096);
-                    }
-                    catch (Exception e)
-                    {
-                        throw (new Exception("Exception", e));
-                    }
+					bytes = OggBaseStream.Read(buffer, index, 4096);
                     if (bytes == 0 && i < 2)
                     {
                         throw (new Exception("End of file before finding all Vorbis headers!"));
@@ -203,8 +199,7 @@ namespace NVorbis
                     byte[][] ptr = Comment.user_comments;
                     for (int j = 0; j < ptr.Length; j++)
                     {
-                        if (ptr[j] == null)
-                            break;
+                        if (ptr[j] == null) break;
 						Debug.WriteLine(Util.InternalEncoding.GetString(ptr[j], 0, ptr[j].Length - 1));
                     }
 					Debug.WriteLine("\nBitstream is {0} channel, {1}Hz", Info.channels, Info.rate);
@@ -228,16 +223,16 @@ namespace NVorbis
                 float[][][] _pcm = new float[1][][];
                 int[] _index = new int[Info.channels];
                 // The rest is just a straight decode loop until end of stream
-                while (eos == 0)
+                while (!eos)
                 {
-                    while (eos == 0)
+                    while (!eos)
                     {
 
                         int result = SyncState.PageOut(Page);
-                        if (result == 0)
-                            break; // need more data
+                        if (result == 0) break; // need more data
                         if (result == -1)
-                        { // missing or corrupt data at this page position
+                        {
+							// missing or corrupt data at this page position
                             Debug.WriteLine("Corrupt or missing data in bitstream; continuing...");
                         }
                         else
@@ -286,16 +281,9 @@ namespace NVorbis
                                                 //		      short val=(short)(pcm[i][mono+j]*32767.);
                                                 //		      int val=(int)Math.round(pcm[i][mono+j]*32767.);
                                                 // might as well guard against clipping
-                                                if (val > 32767)
-                                                {
-                                                    val = 32767;
-                                                }
-                                                if (val < -32768)
-                                                {
-                                                    val = -32768;
-                                                }
-                                                if (val < 0)
-                                                    val = val | 0x8000;
+												if (val > 32767) val = 32767;
+												if (val < -32768) val = -32768;
+                                                if (val < 0) val = val | 0x8000;
                                                 convbuffer[ptr] = (byte)(val);
                                                 convbuffer[ptr + 1] = (byte)(((uint)val) >> 8);
                                                 ptr += 2 * (Info.channels);
@@ -314,23 +302,17 @@ namespace NVorbis
                                 }
                             }
                             if (Page.eos() != 0)
-                                eos = 1;
+                                eos = true;
                         }
                     }
-                    if (eos == 0)
+
+                    if (!eos)
                     {
                         index = SyncState.Buffer(4096);
                         buffer = SyncState.Data;
-                        try
-                        {
-                            bytes = InputStream.Read(buffer, index, 4096);
-                        }
-                        catch (Exception e)
-                        {
-                            throw (new Exception("Exception", e));
-                        }
+						bytes = OggBaseStream.Read(buffer, index, 4096);
                         SyncState.wrote(bytes);
-                        if (bytes == 0) eos = 1;
+                        if (bytes == 0) eos = true;
                     }
                 }
 
@@ -358,7 +340,14 @@ namespace NVorbis
 
         public override bool CanSeek
         {
-            get { return true; }
+            get
+			{
+#if !CAN_SEEK
+				return false;
+#else
+				return true;
+#endif
+			}
         }
 
         public override bool CanWrite
@@ -372,7 +361,14 @@ namespace NVorbis
 
         public override long Length
         {
-            get { return WaveOutputStream.Length; }
+            get
+			{
+#if false
+				throw(new NotImplementedException());
+#else
+				return WaveOutputStream.Length;
+#endif
+			}
         }
 
         public override long Position
@@ -383,8 +379,12 @@ namespace NVorbis
             }
             set
             {
+#if !CAN_SEEK
+				throw(new NotImplementedException("Can't seek"));
+#else
                 WaveOutputStream.Position = value;
-            }
+#endif
+			}
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -394,7 +394,11 @@ namespace NVorbis
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            return WaveOutputStream.Seek(offset, origin);
+#if !CAN_SEEK
+				throw(new NotImplementedException("Can't seek"));
+#else
+				return WaveOutputStream.Seek(offset, origin);
+#endif
         }
 
         public override void SetLength(long value)
