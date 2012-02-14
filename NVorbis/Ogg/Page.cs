@@ -25,9 +25,9 @@ namespace NVorbis.Ogg
 				if ((r & 0x80000000) != 0)
 				{
 					r = (r << 1) ^ 0x04c11db7; /* The same as the ethernet generator
-               					  polynomial, although we use an
-               				  unreflected alg and an init/final
-               				  of 0, not 0xffffffff */
+								  polynomial, although we use an
+							  unreflected alg and an init/final
+							  of 0, not 0xffffffff */
 				}
 				else
 				{
@@ -44,69 +44,90 @@ namespace NVorbis.Ogg
 		public int body;
 		public int body_len;
 
-		internal int version()
+		internal int Version
 		{
-			return header_base[header + 4] & 0xff;
+			get
+			{
+				return header_base[header + 4] & 0xff;
+			}
 		}
 
-		internal int continued()
+		internal bool Continued
 		{
-			return (header_base[header + 5] & 0x01);
+			get
+			{
+				return (header_base[header + 5] & 0x01) != 0;
+			}
 		}
 
-		public int bos()
+		public bool BegginingOfStream
 		{
-			return (header_base[header + 5] & 0x02);
+			get
+			{
+				return (header_base[header + 5] & 0x02) != 0;
+			}
 		}
 
-		public int eos()
+		public bool EndOfStream
 		{
-			return (header_base[header + 5] & 0x04);
+			get
+			{
+				return (header_base[header + 5] & 0x04) != 0;
+			}
 		}
 
-		public long granulepos()
+		public long GranulePosition
 		{
-			/*
-			ulong foo = (ulong)(header_base[header + 13] & 0xff);
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 12] & 0xff));
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 11] & 0xff));
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 10] & 0xff));
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 9] & 0xff));
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 8] & 0xff));
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 7] & 0xff));
-			foo = (ulong)((ulong)(foo << 8) | (ulong)(header_base[header + 6] & 0xff));
-			return (long)(foo);
-			*/
-			ulong foo = (ulong)(header_base[header + 13] & 0xff);
-			foo <<= 8; foo |= header_base[header + 12];
-			foo <<= 8; foo |= header_base[header + 11];
-			foo <<= 8; foo |= header_base[header + 10];
-			foo <<= 8; foo |= header_base[header + 9];
-			foo <<= 8; foo |= header_base[header + 8];
-			foo <<= 8; foo |= header_base[header + 7];
-			foo <<= 8; foo |= header_base[header + 6];
-			return (long)(foo);
+			get
+			{
+				return _ReadGranulePosition(header_base, header + 6);
+			}
 		}
 
-		public int serialno()
+		static public long _ReadGranulePosition(byte[] header_base, int pos)
 		{
-			return (
-				(header_base[header + 14] & 0xff) | ((header_base[header + 15] & 0xff) << 8)
-				| ((header_base[header + 16] & 0xff) << 16)
-				| ((header_base[header + 17] & 0xff) << 24)
-			);
+			if (BitConverter.IsLittleEndian)
+			{
+				return BitConverter.ToInt64(header_base, pos);
+			}
+
+			ulong foo = 0;
+			foo <<= 8; foo |= header_base[pos + 7];
+			foo <<= 8; foo |= header_base[pos + 6];
+			foo <<= 8; foo |= header_base[pos + 5];
+			foo <<= 8; foo |= header_base[pos + 4];
+			foo <<= 8; foo |= header_base[pos + 3];
+			foo <<= 8; foo |= header_base[pos + 2];
+			foo <<= 8; foo |= header_base[pos + 1];
+			foo <<= 8; foo |= header_base[pos + 0];
+			return (long)foo;
 		}
 
-		internal int pageno()
+		public int BitStreamSerialNumber
 		{
-			return (
-				(header_base[header + 18] & 0xff) | ((header_base[header + 19] & 0xff) << 8)
-				| ((header_base[header + 20] & 0xff) << 16)
-				| ((header_base[header + 21] & 0xff) << 24)
-			);
+			get
+			{
+				return (
+					(header_base[header + 14] & 0xff) | ((header_base[header + 15] & 0xff) << 8)
+					| ((header_base[header + 16] & 0xff) << 16)
+					| ((header_base[header + 17] & 0xff) << 24)
+				);
+			}
 		}
 
-		internal void checksum()
+		public int PageSequenceNumber
+		{
+			get
+			{
+				return (
+					(header_base[header + 18] & 0xff) | ((header_base[header + 19] & 0xff) << 8)
+					| ((header_base[header + 20] & 0xff) << 16)
+					| ((header_base[header + 21] & 0xff) << 24)
+				);
+			}
+		}
+
+		public void WriteChecksum()
 		{
 			uint crc_reg = 0;
 
@@ -124,12 +145,12 @@ namespace NVorbis.Ogg
 			header_base[header + 25] = (byte)(crc_reg >> 24);
 		}
 
-		public Page copy()
+		public Page Copy()
 		{
-			return copy(new Page());
+			return Copy(new Page());
 		}
 
-		public Page copy(Page p)
+		public Page Copy(Page p)
 		{
 			byte[] tmp = new byte[header_len];
 			Array.Copy(header_base, header, tmp, 0, header_len);

@@ -47,8 +47,16 @@ namespace NVorbis.Vorbis
 		private const int VI_WINDOWB = 1;
 
 		public int version;
-		public int channels;
-		public int rate;
+
+		/// <summary>
+		/// Number of Channels: 1 Mono, 2 Stereo
+		/// </summary>
+		public int Channels;
+
+		/// <summary>
+		/// Rate: 22050, 44100...
+		/// </summary>
+		public int Rate;
 
 		// The below bitrate declarations are *hints*.
 		// Combinations of the three values carry the following implications:
@@ -78,29 +86,29 @@ namespace NVorbis.Vorbis
 		// different residue backends, etc.  Each mode consists of a
 		// blocksize flag and a mapping (along with the mapping setup
 
-		internal int modes;
+		internal int Modes;
 		internal int maps;
-		internal int times;
+		internal int Times;
 		internal int floors;
 		internal int residues;
-		internal int books;
+		internal int Books;
 		//internal int psys; // encode only
 
-		internal InfoMode[] mode_param = null;
+		internal InfoMode[] ModeParam = null;
 
 		internal int[] map_type = null;
-		internal Object[] map_param = null;
+		internal Object[] MapParam = null;
 
-		internal int[] time_type = null;
-		internal Object[] time_param = null;
+		internal int[] TimeType = null;
+		internal Object[] TimeParam = null;
 
-		internal int[] floor_type = null;
-		internal Object[] floor_param = null;
+		internal int[] FloorType = null;
+		internal Object[] FloorParam = null;
 
 		internal int[] residue_type = null;
-		internal Object[] residue_param = null;
+		internal Object[] ResidueParam = null;
 
-		internal StaticCodeBook[] book_param = null;
+		internal StaticCodeBook[] BookParam = null;
 
 		//internal PsyInfo[] psy_param = new PsyInfo[64]; // encode only
 
@@ -112,58 +120,58 @@ namespace NVorbis.Vorbis
 		*/
 
 		// used by synthesis, which has a full, alloced vi
-		public void init()
+		public void Init()
 		{
-			rate = 0;
+			Rate = 0;
 		}
 
 		public void Clear()
 		{
-			for (int i = 0; i < modes; i++)
+			for (int i = 0; i < Modes; i++)
 			{
-				mode_param[i] = null;
+				ModeParam[i] = null;
 			}
-			mode_param = null;
+			ModeParam = null;
 
 			for (int i = 0; i < maps; i++)
 			{ // unpack does the range checking
-				FuncMapping.mapping_P[map_type[i]].free_info(map_param[i]);
+				FuncMapping.mapping_P[map_type[i]].free_info(MapParam[i]);
 			}
-			map_param = null;
+			MapParam = null;
 
-			for (int i = 0; i < times; i++)
+			for (int i = 0; i < Times; i++)
 			{ // unpack does the range checking
-				FuncTime.time_P[time_type[i]].free_info(time_param[i]);
+				FuncTime.time_P[TimeType[i]].free_info(TimeParam[i]);
 			}
-			time_param = null;
+			TimeParam = null;
 
 			for (int i = 0; i < floors; i++)
 			{ // unpack does the range checking
-				FuncFloor.floor_P[floor_type[i]].free_info(floor_param[i]);
+				FuncFloor.floor_P[FloorType[i]].free_info(FloorParam[i]);
 			}
-			floor_param = null;
+			FloorParam = null;
 
 			for (int i = 0; i < residues; i++)
 			{ // unpack does the range checking
-				FuncResidue.residue_P[residue_type[i]].free_info(residue_param[i]);
+				FuncResidue.residue_P[residue_type[i]].free_info(ResidueParam[i]);
 			}
-			residue_param = null;
+			ResidueParam = null;
 
 			// the static codebooks *are* freed if you call info_clear, because
 			// decode side does alloc a 'static' codebook. Calling clear on the
 			// full codebook does not clear the static codebook (that's our
 			// responsibility)
-			for (int i = 0; i < books; i++)
+			for (int i = 0; i < Books; i++)
 			{
 				// just in case the decoder pre-cleared to save space
-				if (book_param[i] != null)
+				if (BookParam[i] != null)
 				{
-					book_param[i].clear();
-					book_param[i] = null;
+					BookParam[i].clear();
+					BookParam[i] = null;
 				}
 			}
 			//if(vi->book_param)free(vi->book_param);
-			book_param = null;
+			BookParam = null;
 
 			/*
 			for (int i = 0; i < psys; i++)
@@ -174,25 +182,28 @@ namespace NVorbis.Vorbis
 
 		}
 
-		// Header packing/unpacking
-		int unpack_info(NVorbis.Ogg.BBuffer opb)
+		/// <summary>
+		/// Header packing/unpacking
+		/// </summary>
+		/// <param name="Buffer"></param>
+		/// <returns></returns>
+		int UnpackInfo(NVorbis.Ogg.BBuffer Buffer)
 		{
-			version = opb.Read(32);
-			if (version != 0)
-				return (-1);
+			version = Buffer.Read(32);
+			if (version != 0) return (-1);
 
-			channels = opb.Read(8);
-			rate = opb.Read(32);
+			Channels = Buffer.Read(8);
+			Rate = Buffer.Read(32);
 
-			bitrate_upper = opb.Read(32);
-			bitrate_nominal = opb.Read(32);
-			bitrate_lower = opb.Read(32);
+			bitrate_upper = Buffer.Read(32);
+			bitrate_nominal = Buffer.Read(32);
+			bitrate_lower = Buffer.Read(32);
 
-			blocksizes[0] = 1 << opb.Read(4);
-			blocksizes[1] = 1 << opb.Read(4);
+			blocksizes[0] = 1 << Buffer.Read(4);
+			blocksizes[1] = 1 << Buffer.Read(4);
 
-			if ((rate < 1) || (channels < 1) || (blocksizes[0] < 8) || (blocksizes[1] < blocksizes[0])
-				|| (opb.Read(1) != 1))
+			if ((Rate < 1) || (Channels < 1) || (blocksizes[0] < 8) || (blocksizes[1] < blocksizes[0])
+				|| (Buffer.Read(1) != 1))
 			{
 				Clear();
 				return (-1);
@@ -200,19 +211,22 @@ namespace NVorbis.Vorbis
 			return (0);
 		}
 
-		// all of the real encoding details are here.  The modes, books,
-		// everything
-		int unpack_books(NVorbis.Ogg.BBuffer opb)
+		/// <summary>
+		/// All of the real encoding details are here.  The modes, books, everything.
+		/// </summary>
+		/// <param name="Buffer"></param>
+		/// <returns></returns>
+		int UnpackBooks(NVorbis.Ogg.BBuffer Buffer)
 		{
 
-			books = opb.Read(8) + 1;
+			Books = Buffer.Read(8) + 1;
 
-			if (book_param == null || book_param.Length != books)
-				book_param = new StaticCodeBook[books];
-			for (int i = 0; i < books; i++)
+			if (BookParam == null || BookParam.Length != Books) BookParam = new StaticCodeBook[Books];
+
+			for (int i = 0; i < Books; i++)
 			{
-				book_param[i] = new StaticCodeBook();
-				if (book_param[i].unpack(opb) != 0)
+				BookParam[i] = new StaticCodeBook();
+				if (BookParam[i].unpack(Buffer) != 0)
 				{
 					Clear();
 					return (-1);
@@ -220,21 +234,19 @@ namespace NVorbis.Vorbis
 			}
 
 			// time backend settings
-			times = opb.Read(6) + 1;
-			if (time_type == null || time_type.Length != times)
-				time_type = new int[times];
-			if (time_param == null || time_param.Length != times)
-				time_param = new Object[times];
-			for (int i = 0; i < times; i++)
+			Times = Buffer.Read(6) + 1;
+			if (TimeType == null || TimeType.Length != Times) TimeType = new int[Times];
+			if (TimeParam == null || TimeParam.Length != Times) TimeParam = new Object[Times];
+			for (int i = 0; i < Times; i++)
 			{
-				time_type[i] = opb.Read(16);
-				if (time_type[i] < 0 || time_type[i] >= VI_TIMEB)
+				TimeType[i] = Buffer.Read(16);
+				if (TimeType[i] < 0 || TimeType[i] >= VI_TIMEB)
 				{
 					Clear();
 					return (-1);
 				}
-				time_param[i] = FuncTime.time_P[time_type[i]].unpack(this, opb);
-				if (time_param[i] == null)
+				TimeParam[i] = FuncTime.time_P[TimeType[i]].unpack(this, Buffer);
+				if (TimeParam[i] == null)
 				{
 					Clear();
 					return (-1);
@@ -242,23 +254,21 @@ namespace NVorbis.Vorbis
 			}
 
 			// floor backend settings
-			floors = opb.Read(6) + 1;
-			if (floor_type == null || floor_type.Length != floors)
-				floor_type = new int[floors];
-			if (floor_param == null || floor_param.Length != floors)
-				floor_param = new Object[floors];
+			floors = Buffer.Read(6) + 1;
+			if (FloorType == null || FloorType.Length != floors) FloorType = new int[floors];
+			if (FloorParam == null || FloorParam.Length != floors) FloorParam = new Object[floors];
 
 			for (int i = 0; i < floors; i++)
 			{
-				floor_type[i] = opb.Read(16);
-				if (floor_type[i] < 0 || floor_type[i] >= VI_FLOORB)
+				FloorType[i] = Buffer.Read(16);
+				if (FloorType[i] < 0 || FloorType[i] >= VI_FLOORB)
 				{
 					Clear();
 					return (-1);
 				}
 
-				floor_param[i] = FuncFloor.floor_P[floor_type[i]].unpack(this, opb);
-				if (floor_param[i] == null)
+				FloorParam[i] = FuncFloor.floor_P[FloorType[i]].unpack(this, Buffer);
+				if (FloorParam[i] == null)
 				{
 					Clear();
 					return (-1);
@@ -266,24 +276,24 @@ namespace NVorbis.Vorbis
 			}
 
 			// residue backend settings
-			residues = opb.Read(6) + 1;
+			residues = Buffer.Read(6) + 1;
 
 			if (residue_type == null || residue_type.Length != residues)
 				residue_type = new int[residues];
 
-			if (residue_param == null || residue_param.Length != residues)
-				residue_param = new Object[residues];
+			if (ResidueParam == null || ResidueParam.Length != residues)
+				ResidueParam = new Object[residues];
 
 			for (int i = 0; i < residues; i++)
 			{
-				residue_type[i] = opb.Read(16);
+				residue_type[i] = Buffer.Read(16);
 				if (residue_type[i] < 0 || residue_type[i] >= VI_RESB)
 				{
 					Clear();
 					return (-1);
 				}
-				residue_param[i] = FuncResidue.residue_P[residue_type[i]].unpack(this, opb);
-				if (residue_param[i] == null)
+				ResidueParam[i] = FuncResidue.residue_P[residue_type[i]].unpack(this, Buffer);
+				if (ResidueParam[i] == null)
 				{
 					Clear();
 					return (-1);
@@ -291,21 +301,21 @@ namespace NVorbis.Vorbis
 			}
 
 			// map backend settings
-			maps = opb.Read(6) + 1;
+			maps = Buffer.Read(6) + 1;
 			if (map_type == null || map_type.Length != maps)
 				map_type = new int[maps];
-			if (map_param == null || map_param.Length != maps)
-				map_param = new Object[maps];
+			if (MapParam == null || MapParam.Length != maps)
+				MapParam = new Object[maps];
 			for (int i = 0; i < maps; i++)
 			{
-				map_type[i] = opb.Read(16);
+				map_type[i] = Buffer.Read(16);
 				if (map_type[i] < 0 || map_type[i] >= VI_MAPB)
 				{
 					Clear();
 					return (-1);
 				}
-				map_param[i] = FuncMapping.mapping_P[map_type[i]].unpack(this, opb);
-				if (map_param[i] == null)
+				MapParam[i] = FuncMapping.mapping_P[map_type[i]].unpack(this, Buffer);
+				if (MapParam[i] == null)
 				{
 					Clear();
 					return (-1);
@@ -313,27 +323,27 @@ namespace NVorbis.Vorbis
 			}
 
 			// mode settings
-			modes = opb.Read(6) + 1;
-			if (mode_param == null || mode_param.Length != modes)
-				mode_param = new InfoMode[modes];
-			for (int i = 0; i < modes; i++)
+			Modes = Buffer.Read(6) + 1;
+			if (ModeParam == null || ModeParam.Length != Modes)
+				ModeParam = new InfoMode[Modes];
+			for (int i = 0; i < Modes; i++)
 			{
-				mode_param[i] = new InfoMode();
-				mode_param[i].blockflag = opb.Read(1);
-				mode_param[i].windowtype = opb.Read(16);
-				mode_param[i].transformtype = opb.Read(16);
-				mode_param[i].mapping = opb.Read(8);
+				ModeParam[i] = new InfoMode();
+				ModeParam[i].blockflag = Buffer.Read(1);
+				ModeParam[i].windowtype = Buffer.Read(16);
+				ModeParam[i].transformtype = Buffer.Read(16);
+				ModeParam[i].mapping = Buffer.Read(8);
 
-				if ((mode_param[i].windowtype >= VI_WINDOWB)
-					|| (mode_param[i].transformtype >= VI_WINDOWB)
-					|| (mode_param[i].mapping >= maps))
+				if ((ModeParam[i].windowtype >= VI_WINDOWB)
+					|| (ModeParam[i].transformtype >= VI_WINDOWB)
+					|| (ModeParam[i].mapping >= maps))
 				{
 					Clear();
 					return (-1);
 				}
 			}
 
-			if (opb.Read(1) != 1)
+			if (Buffer.Read(1) != 1)
 			{
 				Clear();
 				return (-1);
@@ -347,20 +357,20 @@ namespace NVorbis.Vorbis
 		// with bitstream comments and a third packet that holds the
 		// codebook.
 
-		public int synthesis_headerin(Comment vc, Packet op)
+		public int SynthesisHeaderIn(Comment Comment, Packet Packet)
 		{
-			NVorbis.Ogg.BBuffer opb = new NVorbis.Ogg.BBuffer();
+			var Buffer = new NVorbis.Ogg.BBuffer();
 
-			if (op != null)
+			if (Packet != null)
 			{
-				opb.ReadInit(op.packet_base, op.packet, op.bytes);
+				Buffer.ReadInit(Packet.packet_base, Packet.packet, Packet.bytes);
 
 				// Which of the three types of header is this?
 				// Also verify header-ness, vorbis
 				{
 					byte[] buffer = new byte[6];
-					int packtype = opb.Read(8);
-					opb.Read(buffer, 6);
+					int packtype = Buffer.Read(8);
+					Buffer.Read(buffer, 6);
 					if (buffer[0] != 'v' || buffer[1] != 'o' || buffer[2] != 'r' || buffer[3] != 'b'
 						|| buffer[4] != 'i' || buffer[5] != 's')
 					{
@@ -370,31 +380,31 @@ namespace NVorbis.Vorbis
 					switch (packtype)
 					{
 						case 0x01: // least significant *bit* is read first
-							if (op.b_o_s == 0)
+							if (Packet.b_o_s == 0)
 							{
 								// Not the initial packet
 								return (-1);
 							}
-							if (rate != 0)
+							if (Rate != 0)
 							{
 								// previously initialized info header
 								return (-1);
 							}
-							return (unpack_info(opb));
+							return (UnpackInfo(Buffer));
 						case 0x03: // least significant *bit* is read first
-							if (rate == 0)
+							if (Rate == 0)
 							{
 								// um... we didn't get the initial header
 								return (-1);
 							}
-							return (vc.unpack(opb));
+							return (Comment.unpack(Buffer));
 						case 0x05: // least significant *bit* is read first
-							if (rate == 0 || vc.vendor == null)
+							if (Rate == 0 || Comment.vendor == null)
 							{
 								// um... we didn;t get the initial header or comments yet
 								return (-1);
 							}
-							return (unpack_books(opb));
+							return (UnpackBooks(Buffer));
 						default:
 							// Not a valid vorbis header type
 							//return(-1);
@@ -406,37 +416,37 @@ namespace NVorbis.Vorbis
 		}
 
 		// pack side
-		int pack_info(NVorbis.Ogg.BBuffer opb)
+		int PackInfo(NVorbis.Ogg.BBuffer Buffer)
 		{
 			// preamble
-			opb.Write(0x01, 8);
-			opb.Write(_vorbis);
+			Buffer.Write(0x01, 8);
+			Buffer.Write(_vorbis);
 
 			// basic information about the stream
-			opb.Write(0x00, 32);
-			opb.Write(channels, 8);
-			opb.Write(rate, 32);
+			Buffer.Write(0x00, 32);
+			Buffer.Write(Channels, 8);
+			Buffer.Write(Rate, 32);
 
-			opb.Write(bitrate_upper, 32);
-			opb.Write(bitrate_nominal, 32);
-			opb.Write(bitrate_lower, 32);
+			Buffer.Write(bitrate_upper, 32);
+			Buffer.Write(bitrate_nominal, 32);
+			Buffer.Write(bitrate_lower, 32);
 
-			opb.Write(Util.ilog2(blocksizes[0]), 4);
-			opb.Write(Util.ilog2(blocksizes[1]), 4);
-			opb.Write(1, 1);
+			Buffer.Write(Util.ilog2(blocksizes[0]), 4);
+			Buffer.Write(Util.ilog2(blocksizes[1]), 4);
+			Buffer.Write(1, 1);
 			return (0);
 		}
 
-		int pack_books(NVorbis.Ogg.BBuffer opb)
+		int PackBooks(NVorbis.Ogg.BBuffer Buffer)
 		{
-			opb.Write(0x05, 8);
-			opb.Write(_vorbis);
+			Buffer.Write(0x05, 8);
+			Buffer.Write(_vorbis);
 
 			// books
-			opb.Write(books - 1, 8);
-			for (int i = 0; i < books; i++)
+			Buffer.Write(Books - 1, 8);
+			for (int i = 0; i < Books; i++)
 			{
-				if (book_param[i].pack(opb) != 0)
+				if (BookParam[i].pack(Buffer) != 0)
 				{
 					//goto err_out;
 					return (-1);
@@ -444,68 +454,68 @@ namespace NVorbis.Vorbis
 			}
 
 			// times
-			opb.Write(times - 1, 6);
-			for (int i = 0; i < times; i++)
+			Buffer.Write(Times - 1, 6);
+			for (int i = 0; i < Times; i++)
 			{
-				opb.Write(time_type[i], 16);
-				FuncTime.time_P[time_type[i]].pack(this.time_param[i], opb);
+				Buffer.Write(TimeType[i], 16);
+				FuncTime.time_P[TimeType[i]].pack(this.TimeParam[i], Buffer);
 			}
 
 			// floors
-			opb.Write(floors - 1, 6);
+			Buffer.Write(floors - 1, 6);
 			for (int i = 0; i < floors; i++)
 			{
-				opb.Write(floor_type[i], 16);
-				FuncFloor.floor_P[floor_type[i]].pack(floor_param[i], opb);
+				Buffer.Write(FloorType[i], 16);
+				FuncFloor.floor_P[FloorType[i]].pack(FloorParam[i], Buffer);
 			}
 
 			// residues
-			opb.Write(residues - 1, 6);
+			Buffer.Write(residues - 1, 6);
 			for (int i = 0; i < residues; i++)
 			{
-				opb.Write(residue_type[i], 16);
-				FuncResidue.residue_P[residue_type[i]].pack(residue_param[i], opb);
+				Buffer.Write(residue_type[i], 16);
+				FuncResidue.residue_P[residue_type[i]].pack(ResidueParam[i], Buffer);
 			}
 
 			// maps
-			opb.Write(maps - 1, 6);
+			Buffer.Write(maps - 1, 6);
 			for (int i = 0; i < maps; i++)
 			{
-				opb.Write(map_type[i], 16);
-				FuncMapping.mapping_P[map_type[i]].pack(this, map_param[i], opb);
+				Buffer.Write(map_type[i], 16);
+				FuncMapping.mapping_P[map_type[i]].pack(this, MapParam[i], Buffer);
 			}
 
 			// modes
-			opb.Write(modes - 1, 6);
-			for (int i = 0; i < modes; i++)
+			Buffer.Write(Modes - 1, 6);
+			for (int i = 0; i < Modes; i++)
 			{
-				opb.Write(mode_param[i].blockflag, 1);
-				opb.Write(mode_param[i].windowtype, 16);
-				opb.Write(mode_param[i].transformtype, 16);
-				opb.Write(mode_param[i].mapping, 8);
+				Buffer.Write(ModeParam[i].blockflag, 1);
+				Buffer.Write(ModeParam[i].windowtype, 16);
+				Buffer.Write(ModeParam[i].transformtype, 16);
+				Buffer.Write(ModeParam[i].mapping, 8);
 			}
-			opb.Write(1, 1);
+			Buffer.Write(1, 1);
 			return (0);
 		}
 
-		public int blocksize(Packet op)
+		public int BlockSize(Packet Packet)
 		{
 			//codec_setup_info
-			NVorbis.Ogg.BBuffer opb = new NVorbis.Ogg.BBuffer();
+			var Buffer = new NVorbis.Ogg.BBuffer();
 
 			int mode;
 
-			opb.ReadInit(op.packet_base, op.packet, op.bytes);
+			Buffer.ReadInit(Packet.packet_base, Packet.packet, Packet.bytes);
 
 			/* Check the packet type */
-			if (opb.Read(1) != 0)
+			if (Buffer.Read(1) != 0)
 			{
 				/* Oops.  This is not an audio data packet */
 				return (OV_ENOTAUDIO);
 			}
 			{
 				int modebits = 0;
-				uint v = (uint)modes;
+				uint v = (uint)Modes;
 				while (v > 1)
 				{
 					modebits++;
@@ -513,17 +523,17 @@ namespace NVorbis.Vorbis
 				}
 
 				/* read our mode and pre/post windowsize */
-				mode = opb.Read(modebits);
+				mode = Buffer.Read(modebits);
 			}
 			if (mode == -1)
 				return (OV_EBADPACKET);
-			return (blocksizes[mode_param[mode].blockflag]);
+			return (blocksizes[ModeParam[mode].blockflag]);
 		}
 
 		public override string ToString()
 		{
-			return "version:" + (version) + ", channels:" + (channels)
-				+ ", rate:" + (rate) + ", bitrate:" + (bitrate_upper)
+			return "version:" + (version) + ", channels:" + (Channels)
+				+ ", rate:" + (Rate) + ", bitrate:" + (bitrate_upper)
 				+ "," + (bitrate_nominal) + "," + (bitrate_lower);
 		}
 	}

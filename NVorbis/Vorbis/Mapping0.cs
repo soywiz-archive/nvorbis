@@ -39,12 +39,12 @@ namespace NVorbis.Vorbis
 				int floornum = info.floorsubmap[i];
 				int resnum = info.residuesubmap[i];
 
-				look.time_func[i] = FuncTime.time_P[vi.time_type[timenum]];
-				look.time_look[i] = look.time_func[i].look(vd, vm, vi.time_param[timenum]);
-				look.floor_func[i] = FuncFloor.floor_P[vi.floor_type[floornum]];
-				look.floor_look[i] = look.floor_func[i].look(vd, vm, vi.floor_param[floornum]);
+				look.time_func[i] = FuncTime.time_P[vi.TimeType[timenum]];
+				look.time_look[i] = look.time_func[i].look(vd, vm, vi.TimeParam[timenum]);
+				look.floor_func[i] = FuncFloor.floor_P[vi.FloorType[floornum]];
+				look.floor_look[i] = look.floor_func[i].look(vd, vm, vi.FloorParam[floornum]);
 				look.residue_func[i] = FuncResidue.residue_P[vi.residue_type[resnum]];
-				look.residue_look[i] = look.residue_func[i].look(vd, vm, vi.residue_param[resnum]);
+				look.residue_look[i] = look.residue_func[i].look(vd, vm, vi.ResidueParam[resnum]);
 
 			}
 
@@ -55,7 +55,7 @@ namespace NVorbis.Vorbis
 			}
 			*/
 
-			look.ch = vi.channels;
+			look.ch = vi.Channels;
 
 			return (look);
 		}
@@ -87,8 +87,8 @@ namespace NVorbis.Vorbis
 				opb.Write(info.coupling_steps - 1, 8);
 				for (int i = 0; i < info.coupling_steps; i++)
 				{
-					opb.Write(info.coupling_mag[i], Util.ilog2(vi.channels));
-					opb.Write(info.coupling_ang[i], Util.ilog2(vi.channels));
+					opb.Write(info.coupling_mag[i], Util.ilog2(vi.Channels));
+					opb.Write(info.coupling_ang[i], Util.ilog2(vi.Channels));
 				}
 			}
 			else
@@ -101,7 +101,7 @@ namespace NVorbis.Vorbis
 			/* we don't write the channel submappings if we only have one... */
 			if (info.submaps > 1)
 			{
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 					opb.Write(info.chmuxlist[i], 4);
 			}
 			for (int i = 0; i < info.submaps; i++)
@@ -132,11 +132,11 @@ namespace NVorbis.Vorbis
 
 				for (int i = 0; i < info.coupling_steps; i++)
 				{
-					int testM = info.coupling_mag[i] = opb.Read(Util.ilog2(vi.channels));
-					int testA = info.coupling_ang[i] = opb.Read(Util.ilog2(vi.channels));
+					int testM = info.coupling_mag[i] = opb.Read(Util.ilog2(vi.Channels));
+					int testA = info.coupling_ang[i] = opb.Read(Util.ilog2(vi.Channels));
 
-					if (testM < 0 || testA < 0 || testM == testA || testM >= vi.channels
-						|| testA >= vi.channels)
+					if (testM < 0 || testA < 0 || testM == testA || testM >= vi.Channels
+						|| testA >= vi.Channels)
 					{
 						//goto err_out;
 						info.free();
@@ -153,7 +153,7 @@ namespace NVorbis.Vorbis
 
 			if (info.submaps > 1)
 			{
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 				{
 					info.chmuxlist[i] = opb.Read(4);
 					if (info.chmuxlist[i] >= info.submaps)
@@ -167,7 +167,7 @@ namespace NVorbis.Vorbis
 			for (int i = 0; i < info.submaps; i++)
 			{
 				info.timesubmap[i] = opb.Read(8);
-				if (info.timesubmap[i] >= vi.times)
+				if (info.timesubmap[i] >= vi.Times)
 				{
 					info.free();
 					return (null);
@@ -205,12 +205,12 @@ namespace NVorbis.Vorbis
 				int n = vb.pcmend = vi.blocksizes[vb.W];
 
 				float[] window = vd._window[vb.W][vb.lW][vb.nW][mode.windowtype];
-				if (pcmbundle == null || pcmbundle.Length < vi.channels)
+				if (pcmbundle == null || pcmbundle.Length < vi.Channels)
 				{
-					pcmbundle = new float[vi.channels][];
-					nonzero = new int[vi.channels];
-					zerobundle = new int[vi.channels];
-					floormemo = new Object[vi.channels];
+					pcmbundle = new float[vi.Channels][];
+					nonzero = new int[vi.Channels];
+					zerobundle = new int[vi.Channels];
+					floormemo = new Object[vi.Channels];
 				}
 
 				// time domain information decode (note that applying the
@@ -219,7 +219,7 @@ namespace NVorbis.Vorbis
 				// NOT IMPLEMENTED
 
 				// recover the spectral envelope; store it in the PCM vector for now 
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 				{
 					float[] pcm = vb.pcm[i];
 					int submap = info.chmuxlist[i];
@@ -255,7 +255,7 @@ namespace NVorbis.Vorbis
 				for (int i = 0; i < info.submaps; i++)
 				{
 					int ch_in_bundle = 0;
-					for (int j = 0; j < vi.channels; j++)
+					for (int j = 0; j < vi.Channels; j++)
 					{
 						if (info.chmuxlist[j] == i)
 						{
@@ -316,7 +316,7 @@ namespace NVorbis.Vorbis
 
 				//    /* compute and apply spectral envelope */
 
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 				{
 					float[] pcm = vb.pcm[i];
 					int submap = info.chmuxlist[i];
@@ -327,7 +327,7 @@ namespace NVorbis.Vorbis
 				// transform the PCM data; takes PCM vector, vb; modifies PCM vector
 				// only MDCT right now....
 
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 				{
 					float[] pcm = vb.pcm[i];
 					//_analysis_output("out",seq+i,pcm,n/2,0,0);
@@ -338,7 +338,7 @@ namespace NVorbis.Vorbis
 				// NOT IMPLEMENTED
 
 				// window the data
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 				{
 					float[] pcm = vb.pcm[i];
 					if (nonzero[i] != 0)

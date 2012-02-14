@@ -38,7 +38,7 @@ namespace NVorbis.Vorbis
 			for (int j = 0; j < info.numbooks; j++)
 			{
 				info.books[j] = opb.Read(8);
-				if (info.books[j] < 0 || info.books[j] >= vi.books)
+				if (info.books[j] < 0 || info.books[j] >= vi.Books)
 				{
 					return (null);
 				}

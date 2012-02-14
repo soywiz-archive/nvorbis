@@ -86,7 +86,7 @@ namespace NVorbis.Vorbis
 				{
 					info.class_book[j] = opb.Read(8);
 				}
-				if (info.class_book[j] < 0 || info.class_book[j] >= vi.books)
+				if (info.class_book[j] < 0 || info.class_book[j] >= vi.Books)
 				{
 					info.free();
 					return (null);
@@ -94,7 +94,7 @@ namespace NVorbis.Vorbis
 				for (int k = 0; k < (1 << info.class_subs[j]); k++)
 				{
 					info.class_subbook[j][k] = opb.Read(8) - 1;
-					if (info.class_subbook[j][k] < -1 || info.class_subbook[j][k] >= vi.books)
+					if (info.class_subbook[j][k] < -1 || info.class_subbook[j][k] >= vi.Books)
 					{
 						info.free();
 						return (null);

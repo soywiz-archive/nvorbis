@@ -71,7 +71,7 @@ namespace NVorbis.Vorbis
 				info.booklist[j] = opb.Read(8);
 			}
 
-			if (info.groupbook >= vi.books)
+			if (info.groupbook >= vi.Books)
 			{
 				free_info(info);
 				return (null);
@@ -79,7 +79,7 @@ namespace NVorbis.Vorbis
 
 			for (int j = 0; j < acc; j++)
 			{
-				if (info.booklist[j] >= vi.books)
+				if (info.booklist[j] >= vi.Books)
 				{
 					free_info(info);
 					return (null);

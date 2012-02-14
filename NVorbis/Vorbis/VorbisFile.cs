@@ -107,7 +107,16 @@ namespace NVorbis.Vorbis
 		}
 #endif
 
-		public VorbisFile(Stream _is, byte[] initial = null, int ibytes = 0)
+		public VorbisFile(Stream _is)
+		{
+			_init();
+			int ret = open(_is, null, 0);
+			if (ret == -1)
+			{
+			}
+		}
+
+		public VorbisFile(Stream _is, byte[] initial, int ibytes)
 		{
 			_init();
 			int ret = open(_is, initial, ibytes);
@@ -129,7 +138,7 @@ namespace NVorbis.Vorbis
 			{
 				return OV_EREAD;
 			}
-			oy.wrote(bytes);
+			oy.Wrote(bytes);
 			if (bytes == -1)
 			{
 				bytes = 0;
@@ -201,7 +210,7 @@ namespace NVorbis.Vorbis
 					if (ret < 0)
 					{
 						if (offst == -1)
-							throw new JOrbisException();
+							throw new VorbisException();
 						break;
 					}
 					else
@@ -243,7 +252,7 @@ namespace NVorbis.Vorbis
 				ret = get_next_page(page, -1);
 				if (ret == OV_EREAD)
 					return OV_EREAD;
-				if (ret < 0 || page.serialno() != currentno)
+				if (ret < 0 || page.BitStreamSerialNumber != currentno)
 				{
 					endsearched = bisect;
 					if (ret >= 0)
@@ -267,7 +276,7 @@ namespace NVorbis.Vorbis
 			}
 			else
 			{
-				ret = bisect_forward_serialno(next, offset, end, page.serialno(), m + 1);
+				ret = bisect_forward_serialno(next, offset, end, page.BitStreamSerialNumber, m + 1);
 				if (ret == OV_EREAD)
 					return OV_EREAD;
 			}
@@ -294,20 +303,20 @@ namespace NVorbis.Vorbis
 			}
 
 			if (serialno != null)
-				serialno[0] = og_ptr.serialno();
+				serialno[0] = og_ptr.BitStreamSerialNumber;
 
-			os.Init(og_ptr.serialno());
+			os.Init(og_ptr.BitStreamSerialNumber);
 
 			// extract the initial header from the first page and verify that the
 			// Ogg bitstream is in fact Vorbis data
 
-			vi.init();
+			vi.Init();
 			vc.init();
 
 			int i = 0;
 			while (i < 3)
 			{
-				os.pagein(og_ptr);
+				os.PageIn(og_ptr);
 				while (i < 3)
 				{
 					int result = os.PacketOut(op);
@@ -320,7 +329,7 @@ namespace NVorbis.Vorbis
 						os.Clear();
 						return -1;
 					}
-					if (vi.synthesis_headerin(vc, op) != 0)
+					if (vi.SynthesisHeaderIn(vc, op) != 0)
 					{
 						vi.Clear();
 						vc.Clear();
@@ -341,10 +350,15 @@ namespace NVorbis.Vorbis
 			return 0;
 		}
 
-		// last step of the OggVorbis_File initialization; get all the
-		// vorbis_info structs and PCM positions.  Only called by the seekable
-		// initialization (local stream storage is hacked slightly; pay
-		// attention to how that's done)
+		/// <summary>
+		/// last step of the OggVorbis_File initialization; get all the
+		/// vorbis_info structs and PCM positions.  Only called by the seekable
+		/// initialization (local stream storage is hacked slightly; pay
+		/// attention to how that's done)
+		/// </summary>
+		/// <param name="first_i"></param>
+		/// <param name="first_c"></param>
+		/// <param name="dataoffset"></param>
 		void prefetch_all_headers(Info first_i, Comment first_c, int dataoffset)
 		{
 			Page og = new Page();
@@ -399,10 +413,10 @@ namespace NVorbis.Vorbis
 							vc[i].Clear();
 							break;
 						}
-						if (og.granulepos() != -1)
+						if (og.GranulePosition != -1)
 						{
-							serialnos[i] = og.serialno();
-							pcmlengths[i] = og.granulepos();
+							serialnos[i] = og.BitStreamSerialNumber;
+							pcmlengths[i] = og.GranulePosition;
 							break;
 						}
 					}
@@ -450,7 +464,7 @@ namespace NVorbis.Vorbis
 			// Most OggVorbis files will contain a single logical bitstream
 			end = get_prev_page(og);
 			// moer than one logical bitstream?
-			if (og.serialno() != serialno)
+			if (og.BitStreamSerialNumber != serialno)
 			{
 				// Chained bitstream. Bisect-search each logical bitstream
 				// section.  Do so based on serial number only
@@ -592,7 +606,7 @@ namespace NVorbis.Vorbis
 				// has our decoding just traversed a bitstream boundary?
 				if (decode_ready)
 				{
-					if (current_serialno != og.serialno())
+					if (current_serialno != og.BitStreamSerialNumber)
 					{
 						decode_clear();
 					}
@@ -614,7 +628,7 @@ namespace NVorbis.Vorbis
 					int i;
 					if (_seekable)
 					{
-						current_serialno = og.serialno();
+						current_serialno = og.BitStreamSerialNumber;
 
 						// match the serialno to bitstream section.  We use this rather than
 						// offset positions to avoid problems near logical bitstream
@@ -647,7 +661,7 @@ namespace NVorbis.Vorbis
 					}
 					make_decode_ready();
 				}
-				os.pagein(og);
+				os.PageIn(og);
 			}
 		}
 
@@ -764,7 +778,7 @@ namespace NVorbis.Vorbis
 			{
 				int index = oy.Buffer(ibytes);
 				Array.Copy(initial, 0, oy.Data, index, ibytes);
-				oy.wrote(ibytes);
+				oy.Wrote(ibytes);
 			}
 			// can we seek? Stevens suggests the seek test was portable
 			if (_is is Stream)
@@ -859,7 +873,7 @@ namespace NVorbis.Vorbis
 			int _link = (_seekable ? current_link : 0);
 			if (samptrack == 0)
 				return (-1);
-			int ret = (int)(bittrack / samptrack * vi[_link].rate + .5);
+			int ret = (int)(bittrack / samptrack * vi[_link].Rate + .5);
 			bittrack = 0.0f;
 			samptrack = 0.0f;
 			return (ret);
@@ -944,7 +958,7 @@ namespace NVorbis.Vorbis
 			}
 			else
 			{
-				return ((float)(pcmlengths[i]) / vi[i].rate);
+				return ((float)(pcmlengths[i]) / vi[i].Rate);
 			}
 		}
 
@@ -1087,7 +1101,7 @@ namespace NVorbis.Vorbis
 					}
 					else
 					{
-						long granulepos = og.granulepos();
+						var granulepos = og.GranulePosition;
 						if (granulepos < target)
 						{
 							best = ret; // raw offset of packet with granulepos
@@ -1131,7 +1145,7 @@ namespace NVorbis.Vorbis
 			{
 				int target = (int)(pos - pcm_offset);
 				float[][][] _pcm = new float[1][][];
-				int[] _index = new int[getInfo(-1).channels];
+				int[] _index = new int[getInfo(-1).Channels];
 				int samples = vd.synthesis_pcmout(_pcm, _index);
 
 				if (samples > target)
@@ -1185,7 +1199,7 @@ namespace NVorbis.Vorbis
 
 			// enough information to convert time offset to pcm offset
 			{
-				long target = (long)(pcm_total + (seconds - time_total) * vi[link].rate);
+				long target = (long)(pcm_total + (seconds - time_total) * vi[link].Rate);
 				return (pcm_seek(target));
 			}
 
@@ -1233,7 +1247,7 @@ namespace NVorbis.Vorbis
 				}
 			}
 
-			return ((float)time_total + (float)(pcm_offset - pcm_total) / vi[link].rate);
+			return ((float)time_total + (float)(pcm_offset - pcm_total) / vi[link].Rate);
 		}
 
 		//  link:   -1) return the vorbis_info struct for the bitstream section
@@ -1360,7 +1374,12 @@ namespace NVorbis.Vorbis
 		// 
 		// *section) set to the logical bitstream number
 
-		internal int read(byte[] buffer, int length, int bigendianp, int word, int sgned, int[] bitstream = null)
+		internal int read(byte[] buffer, int length, int bigendianp, int word, int sgned)
+		{
+			return read(buffer, length, bigendianp, word, sgned, null);
+		}
+
+		internal int read(byte[] buffer, int length, int bigendianp, int word, int sgned, int[] bitstream)
 		{
 			int host_endian = host_is_big_endian();
 			int index = 0;
@@ -1373,14 +1392,14 @@ namespace NVorbis.Vorbis
 				{
 					float[][] pcm;
 					float[][][] _pcm = new float[1][][];
-					int[] _index = new int[getInfo(-1).channels];
+					int[] _index = new int[getInfo(-1).Channels];
 					int samples = vd.synthesis_pcmout(_pcm, _index);
 					//Console.WriteLine("Samples: " + samples);
 					pcm = _pcm[0];
 					if (samples != 0)
 					{
 						// yay! proceed to pack data into the byte buffer
-						int channels = getInfo(-1).channels;
+						int channels = getInfo(-1).Channels;
 						int bytespersample = word * channels;
 						if (samples > length / bytespersample)
 							samples = length / bytespersample;

@@ -154,7 +154,7 @@ namespace NVorbis.Vorbis
 		int init(Info vi, bool encp)
 		{
 			this.vi = vi;
-			modebits = Util.ilog2(vi.modes);
+			modebits = Util.ilog2(vi.Modes);
 
 			transform[0] = new Object[VI_TRANSFORMB];
 			transform[1] = new Object[VI_TRANSFORMB];
@@ -189,11 +189,11 @@ namespace NVorbis.Vorbis
 					vi.blocksizes[1] / 2);
 			}
 
-			fullbooks = new CodeBook[vi.books];
-			for (int i = 0; i < vi.books; i++)
+			fullbooks = new CodeBook[vi.Books];
+			for (int i = 0; i < vi.Books; i++)
 			{
 				fullbooks[i] = new CodeBook();
-				fullbooks[i].init_decode(vi.book_param[i]);
+				fullbooks[i].init_decode(vi.BookParam[i]);
 			}
 
 			// initialize the storage vectors to a decent size greater than the
@@ -202,9 +202,9 @@ namespace NVorbis.Vorbis
 			pcm_storage = 8192; // we'll assume later that we have
 			// a minimum of twice the blocksize of
 			// accumulated samples in analysis
-			pcm = new float[vi.channels][];
+			pcm = new float[vi.Channels][];
 			{
-				for (int i = 0; i < vi.channels; i++)
+				for (int i = 0; i < vi.Channels; i++)
 				{
 					pcm[i] = new float[pcm_storage];
 				}
@@ -221,13 +221,13 @@ namespace NVorbis.Vorbis
 			pcm_current = centerW;
 
 			// initialize all the mapping/backend lookups
-			mode = new Object[vi.modes];
-			for (int i = 0; i < vi.modes; i++)
+			mode = new Object[vi.Modes];
+			for (int i = 0; i < vi.Modes; i++)
 			{
-				int mapnum = vi.mode_param[i].mapping;
+				int mapnum = vi.ModeParam[i].mapping;
 				int maptype = vi.map_type[mapnum];
-				mode[i] = FuncMapping.mapping_P[maptype].look(this, vi.mode_param[i],
-					vi.map_param[mapnum]);
+				mode[i] = FuncMapping.mapping_P[maptype].look(this, vi.ModeParam[i],
+					vi.MapParam[mapnum]);
 			}
 			return (0);
 		}
@@ -275,7 +275,7 @@ namespace NVorbis.Vorbis
 				pcm_returned -= shiftPCM;
 				if (shiftPCM != 0)
 				{
-					for (int i = 0; i < vi.channels; i++)
+					for (int i = 0; i < vi.Channels; i++)
 					{
 						Array.Copy(pcm[i], shiftPCM, pcm[i], 0, pcm_current);
 					}
@@ -309,7 +309,7 @@ namespace NVorbis.Vorbis
 				{
 					// expand the storage
 					pcm_storage = endW + vi.blocksizes[1];
-					for (int i = 0; i < vi.channels; i++)
+					for (int i = 0; i < vi.Channels; i++)
 					{
 						float[] foo = new float[pcm_storage];
 						Array.Copy(pcm[i], 0, foo, 0, pcm[i].Length);
@@ -330,7 +330,7 @@ namespace NVorbis.Vorbis
 						break;
 				}
 
-				for (int j = 0; j < vi.channels; j++)
+				for (int j = 0; j < vi.Channels; j++)
 				{
 					int _pcm = beginW;
 					// the overlap/add section
@@ -393,7 +393,7 @@ namespace NVorbis.Vorbis
 			{
 				if (_pcm != null)
 				{
-					for (int i = 0; i < vi.channels; i++)
+					for (int i = 0; i < vi.Channels; i++)
 					{
 						index[i] = pcm_returned;
 					}

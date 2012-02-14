@@ -7,6 +7,7 @@ using System.Text;
 
 namespace NVorbis.Extra
 {
+#if false
 	public class WaveStream
 	{
 		protected Stream Stream;
@@ -134,4 +135,5 @@ namespace NVorbis.Extra
 			});
 		}
 	}
+#endif
 }

@@ -275,7 +275,7 @@ namespace NVorbis.Ogg
 		/// </summary>
 		/// <param name="Page"></param>
 		/// <returns></returns>
-		public int pagein(Page Page)
+		public int PageIn(Page Page)
 		{
 			byte[] header_base = Page.header_base;
 			int header = Page.header;
@@ -284,13 +284,13 @@ namespace NVorbis.Ogg
 			int bodysize = Page.body_len;
 			int segptr = 0;
 
-			int version = Page.version();
-			int continued = Page.continued();
-			int bos = Page.bos();
-			int eos = Page.eos();
-			long granulepos = Page.granulepos();
-			int _serialno = Page.serialno();
-			int _pageno = Page.pageno();
+			int version = Page.Version;
+			bool continued = Page.Continued;
+			bool bos = Page.BegginingOfStream;
+			bool eos = Page.EndOfStream;
+			long granulepos = Page.GranulePosition;
+			int _serialno = Page.BitStreamSerialNumber;
+			int _pageno = Page.PageSequenceNumber;
 			int segments = header_base[header + 26] & 0xff;
 
 			// Clean up 'returned data'
@@ -353,9 +353,9 @@ namespace NVorbis.Ogg
 
 				// are we a 'continued packet' page?  If so, we'll need to skip
 				// some segments
-				if (continued != 0)
+				if (continued)
 				{
-					bos = 0;
+					bos = false;
 					for (; segptr < segments; segptr++)
 					{
 						int val = (header_base[header + 27 + segptr] & 0xff);
@@ -385,10 +385,10 @@ namespace NVorbis.Ogg
 					LacingVals[lacing_fill] = val;
 					GranuleVals[lacing_fill] = -1;
 
-					if (bos != 0)
+					if (bos)
 					{
 						LacingVals[lacing_fill] |= 0x100;
-						bos = 0;
+						bos = false;
 					}
 
 					if (val < 255)
@@ -408,7 +408,7 @@ namespace NVorbis.Ogg
 				}
 			}
 
-			if (eos != 0)
+			if (eos)
 			{
 				e_o_s = 1;
 				if (lacing_fill > 0)
@@ -556,7 +556,7 @@ namespace NVorbis.Ogg
 			body_returned += bytes;
 
 			// calculate the checksum
-			og.checksum();
+			og.WriteChecksum();
 
 			// done
 			return 1;

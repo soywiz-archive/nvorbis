@@ -72,7 +72,7 @@ namespace NVorbis.Ogg
 			return (Fill);
 		}
 
-		public int wrote(int bytes)
+		public int Wrote(int bytes)
 		{
 			if (Fill + bytes > Storage) return (-1);
 			Fill += bytes;
@@ -161,7 +161,7 @@ namespace NVorbis.Ogg
 				log.body_base = Data;
 				log.body = page + HeaderBytes;
 				log.body_len = BodyBytes;
-				log.checksum();
+				log.WriteChecksum();
 
 				// Compare
 				if (chksum[0] != Data[page + 22] || chksum[1] != Data[page + 23]

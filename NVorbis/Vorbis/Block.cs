@@ -105,7 +105,7 @@ namespace NVorbis.Vorbis
 				return (-1);
 
 			mode = _mode;
-			W = vi.mode_param[mode].blockflag;
+			W = vi.ModeParam[mode].blockflag;
 			if (W != 0)
 			{
 				lW = opb.Read(1);
@@ -126,11 +126,11 @@ namespace NVorbis.Vorbis
 
 			// alloc pcm passback storage
 			pcmend = vi.blocksizes[W];
-			if (pcm.Length < vi.channels)
+			if (pcm.Length < vi.Channels)
 			{
-				pcm = new float[vi.channels][];
+				pcm = new float[vi.Channels][];
 			}
-			for (int i = 0; i < vi.channels; i++)
+			for (int i = 0; i < vi.Channels; i++)
 			{
 				if (pcm[i] == null || pcm[i].Length < pcmend)
 				{
@@ -146,7 +146,7 @@ namespace NVorbis.Vorbis
 			}
 
 			// unpack_header enforces range checking
-			int type = vi.map_type[vi.mode_param[mode].mapping];
+			int type = vi.map_type[vi.ModeParam[mode].mapping];
 			return (FuncMapping.mapping_P[type].inverse(this, vd.mode[mode]));
 		}
 	}
